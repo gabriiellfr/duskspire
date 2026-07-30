@@ -13,6 +13,7 @@ import { damageTakenWithin } from '../src/sim/combat/damage_history';
 import { rewindHealAmount } from '../src/sim/combat/rewind';
 import { DEEDS } from '../src/sim/content/deeds';
 import { isFinderListingTag, isFinderRole } from '../src/sim/content/dungeon_finder';
+import { DUSKSPIRE_CITY } from '../src/sim/content/duskspire_city';
 import { MECH_CHROMAS, mechChromaItemId, mechChromaSkinIndex } from '../src/sim/content/skins';
 import { SPORT_ROLES, VALE_CUP_BALL_TEMPLATE_ID, VC_NATION_IDS } from '../src/sim/content/vale_cup';
 import { withWeaponSkinApplied } from '../src/sim/content/weapon_skin_rules';
@@ -25,6 +26,7 @@ import {
   dungeonAt,
   isDelvePos,
   MOBS,
+  setActiveWorldContent,
   ZONES,
   zoneAt,
 } from '../src/sim/data';
@@ -1510,10 +1512,17 @@ export class GameServer {
   private readonly riftAssets: RiftAssetCoordinator;
 
   constructor() {
+    // Fork (Duskspire): DUSKSPIRE_WORLD=1 serves the single-zone city world.
+    // Both wirings are required (the sim reads spawns from config, terrain
+    // reads the data.ts registry), and the WS discriminator shifts with the
+    // flag (ws_auth.ts) so only matching client builds are admitted.
+    const duskspireWorld = process.env.DUSKSPIRE_WORLD === '1';
+    if (duskspireWorld) setActiveWorldContent(DUSKSPIRE_CITY);
     this.sim = new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
       noPlayer: true,
+      world: duskspireWorld ? DUSKSPIRE_CITY : undefined,
       devCommands: process.env.ALLOW_DEV_COMMANDS === '1',
       // Thunzharr is up as soon as the realm boots; subsequent rises keep the
       // normal interval cadence (see src/sim/world_boss.ts).

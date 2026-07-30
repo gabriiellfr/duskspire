@@ -17,10 +17,17 @@ import type * as http from 'node:http';
 import type { WebSocket, WebSocketServer } from 'ws';
 import {
   type BankBonusSource,
-  ONLINE_WORLD_AUTH_TYPE,
   ONLINE_WORLD_INCOMPATIBLE_MESSAGE,
+  onlineWorldAuthType,
   STABLE_TIMER_WIRE_VERSION,
 } from '../src/world_api';
+
+// Fork (Duskspire): the expected first-frame discriminator shifts with the
+// served world (see onlineWorldAuthType), so a vanilla client cannot join a
+// city-world realm or vice versa; both directions classify as an incompatible
+// world layout through the startsWith('auth-world-') arm below.
+const EXPECTED_AUTH_TYPE = onlineWorldAuthType(process.env.DUSKSPIRE_WORLD === '1');
+
 import type {
   AccountChatMuteStatus,
   AccountCosmetics,
@@ -242,7 +249,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
       rejectHandshake(ws, WS_AUTH_ERROR.badAuthMessage);
       return;
     }
-    if (msg?.t !== ONLINE_WORLD_AUTH_TYPE) {
+    if (msg?.t !== EXPECTED_AUTH_TYPE) {
       const authType = msg?.t;
       const isWorldAuthAttempt =
         authType === 'auth' ||

@@ -114,6 +114,16 @@ export type {
 // before either binary loads a character into a differently shaped world.
 export const ONLINE_WORLD_LAYOUT_VERSION = 3 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
+// Fork (Duskspire): a host serving the city world is a DIFFERENT authoritative
+// layout, so it derives a distinct discriminator from the same epoch. Pure:
+// each host passes its own flag (server: DUSKSPIRE_WORLD=1, client build:
+// VITE_DUSKSPIRE_WORLD=1), and any mismatched pairing fails closed through the
+// existing strict first-frame check in both directions (the suffix keeps the
+// 'auth-world-' prefix so the mismatch classifies as an incompatible layout,
+// not a missing auth).
+export function onlineWorldAuthType(duskspireWorld: boolean): string {
+  return duskspireWorld ? `${ONLINE_WORLD_AUTH_TYPE}-dusk1` : ONLINE_WORLD_AUTH_TYPE;
+}
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI
 // matcher re-localizes it, so all three must stay byte-identical.

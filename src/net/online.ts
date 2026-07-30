@@ -109,9 +109,9 @@ import {
   type MailInfo,
   type MarketInfo,
   type MountRaceView,
-  ONLINE_WORLD_AUTH_TYPE,
   ONLINE_WORLD_INCOMPATIBLE_MESSAGE,
   type OverheadEmoteId,
+  onlineWorldAuthType,
   type PartyInfo,
   type PlayerProfessionsView,
   type PresenceStatus,
@@ -229,19 +229,25 @@ export {
   NATIVE_APP,
 } from '../client_origin';
 
+// Fork (Duskspire): a client built with VITE_DUSKSPIRE_WORLD=1 renders the
+// city world, so it must speak the matching discriminator (world_api.ts
+// onlineWorldAuthType); a mismatched server rejects it as an incompatible
+// world layout before character admission, in both directions.
+const CLIENT_AUTH_TYPE = onlineWorldAuthType(import.meta.env.VITE_DUSKSPIRE_WORLD === '1');
+
 export function buildWebSocketAuthMessage(
   token: string,
   characterId: number,
   clientSeed = '',
 ): {
-  t: typeof ONLINE_WORLD_AUTH_TYPE;
+  t: string;
   token: string;
   character: number;
   clientSeed: string;
   timerWire: typeof STABLE_TIMER_WIRE_VERSION;
 } {
   return {
-    t: ONLINE_WORLD_AUTH_TYPE,
+    t: CLIENT_AUTH_TYPE,
     token,
     character: characterId,
     clientSeed,

@@ -192,6 +192,7 @@ import { desktopBridge } from './runtime';
 import { pathCrossesFence } from './sim/colliders';
 import { isStunned } from './sim/combat/cc';
 import { ABILITIES, CLASSES } from './sim/content/classes';
+import { DUSKSPIRE_CITY } from './sim/content/duskspire_city';
 import { HEROIC_VENDOR_STOCK } from './sim/content/heroic_vendor';
 import { rowTreeFor } from './sim/content/talents';
 import {
@@ -341,6 +342,14 @@ import { formatXp } from './ui/xp_bar';
 import type { IWorld, LeaderboardEntry } from './world_api';
 
 const WORLD_SEED = 20061; // fixed: World of ClaudeCraft is a persistent place
+
+// Fork (Duskspire): a VITE_DUSKSPIRE_WORLD=1 build renders the single-zone
+// city world in EVERY mode: offline runs it as SimConfig.world, and online
+// routes terrain/props at it too (the renderer reads the data.ts registry;
+// entities come from the server, which must be a DUSKSPIRE_WORLD=1 realm, and
+// the shifted WS discriminator in src/net/online.ts guarantees the pairing).
+const DUSKSPIRE_WORLD = import.meta.env.VITE_DUSKSPIRE_WORLD === '1';
+if (DUSKSPIRE_WORLD) setActiveWorldContent(DUSKSPIRE_CITY);
 const CLICK_MOVE_TURN_RATE = 4.2; // rad/sec; responsive turning while the camera stays decoupled from click spam
 const CLICK_MOVE_WAYPOINT_STOP = 0.8; // yards; intermediate A* corners should roll through, not stutter-stop
 const CLICK_MOVE_REROUTE_DISTANCE = 4; // yards; live entity targets can move this far before we recompute the path
@@ -4086,6 +4095,9 @@ async function startOffline(
 ): Promise<void> {
   if (!(await prepareWorldEntry())) return;
   enterLoadingState(t('loading.world'));
+  // Fork (Duskspire): a city build's offline mode runs the city world unless
+  // an explicit world (editor play-test) was passed.
+  if (world === undefined && DUSKSPIRE_WORLD) world = DUSKSPIRE_CITY;
   // Editor play-test: route terrain + props at the custom world too (the renderer
   // reaches it by module global), in addition to the Sim reading cfg.world.
   if (world) setActiveWorldContent(world);
