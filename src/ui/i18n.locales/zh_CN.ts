@@ -7728,6 +7728,8 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'apiError.ota_updates.invalid_input': '输入无效。',
   'apiError.p2e.invalid_input': '输入无效。',
   'apiError.p2e.insufficient_funds': '代币不足。',
+  'apiError.p2e.wallet_not_linked': '请先绑定钱包。',
+  'apiError.p2e.below_minimum': '金额低于最低限额。',
   'apiError.steam.disabled': 'Steam 关联当前不可用。',
   'apiError.wallet.handoff_invalid': '钱包授权已过期或无法验证。请重试。',
   'apiError.steam.invalid_ticket': 'Steam 无法验证此关联请求。请在桌面客户端中重试。',

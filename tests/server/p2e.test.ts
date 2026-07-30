@@ -10,7 +10,7 @@ import {
   routes,
   setP2eDbForTests,
 } from '../../server/p2e';
-import type { P2eLedgerEntry, P2eMutationOutcome } from '../../server/p2e_db';
+import type { P2eLedgerEntry, P2eMutationOutcome, P2eWithdrawalOutcome } from '../../server/p2e_db';
 import { fakeCtx } from './helpers';
 
 interface FakeResShape {
@@ -55,6 +55,24 @@ class FakeLedger {
   balances = new Map<number, bigint>();
   entries: (P2eLedgerEntry & { accountId: number })[] = [];
   refs = new Set<string>();
+  withdrawals: { id: string; accountId: number; amount: bigint; destination: string }[] = [];
+  wallets = new Map<number, string>();
+
+  linkedWallet = async (accountId: number): Promise<string | null> =>
+    this.wallets.get(accountId) ?? null;
+
+  requestWithdrawal = async (
+    accountId: number,
+    amount: bigint,
+    destination: string,
+  ): Promise<P2eWithdrawalOutcome> => {
+    const balance = this.balances.get(accountId) ?? 0n;
+    if (balance - amount < 0n) return { ok: false, error: 'insufficient_funds' };
+    this.balances.set(accountId, balance - amount);
+    const id = String(this.withdrawals.length + 1);
+    this.withdrawals.push({ id, accountId, amount, destination });
+    return { ok: true, id, balance: balance - amount };
+  };
 
   balanceFor = async (accountId: number): Promise<bigint> => this.balances.get(accountId) ?? 0n;
 
@@ -99,6 +117,8 @@ function installFake(ledger: FakeLedger): void {
     balanceFor: ledger.balanceFor,
     ledgerPage: ledger.ledgerPage,
     applyMutation: ledger.applyMutation,
+    requestWithdrawal: ledger.requestWithdrawal,
+    linkedWallet: ledger.linkedWallet,
   });
 }
 
@@ -247,5 +267,84 @@ describe('GET /api/p2e/ledger', () => {
     await runRoute('/api/p2e/ledger', ctx);
     const page = captured(ctx.res).body as { entries: P2eLedgerEntry[] };
     expect(page.entries.map((e) => e.delta)).toEqual(['100']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/p2e/withdraw handler arms (middleware bypassed; ctx.account
+// preset, the steam_routes.test.ts pattern).
+// ---------------------------------------------------------------------------
+
+describe('POST /api/p2e/withdraw', () => {
+  const handler = () => {
+    const route = routes.find((r) => r.path === '/api/p2e/withdraw');
+    if (!route) throw new Error('withdraw route missing');
+    return route.handler;
+  };
+  const ACCOUNT = { accountId: 1, scope: 'full' as const };
+  const WALLET = 'PlayerWallet11111111111111111111111111111';
+
+  function withdrawCtx(body: unknown) {
+    return fakeCtx({ method: 'POST', url: '/api/p2e/withdraw', account: ACCOUNT, body });
+  }
+
+  it('debits and queues a payout to the LINKED wallet only', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    ledger.wallets.set(1, WALLET);
+    await creditP2e(1, 50_000_000_000n, 'deposit', 'sig1');
+    const ctx = withdrawCtx({ amount: '20000000000' });
+    await handler()(ctx);
+    expect(captured(ctx.res)).toEqual({
+      status: 200,
+      body: { id: '1', balance: '30000000000', destination: WALLET, status: 'pending' },
+    });
+    expect(ledger.withdrawals).toEqual([
+      { id: '1', accountId: 1, amount: 20_000_000_000n, destination: WALLET },
+    ]);
+  });
+
+  it('409s with wallet_not_linked when no wallet is linked', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    await creditP2e(1, 50_000_000_000n, 'deposit', 'sig1');
+    await expect(handler()(withdrawCtx({ amount: '20000000000' }))).rejects.toMatchObject({
+      status: 409,
+      code: 'p2e.wallet_not_linked',
+    });
+    expect(ledger.withdrawals).toEqual([]);
+  });
+
+  it('409s with insufficient_funds past the balance, leaving no queue row', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    ledger.wallets.set(1, WALLET);
+    await creditP2e(1, 10_000_000_000n, 'deposit', 'sig1');
+    await expect(handler()(withdrawCtx({ amount: '20000000000' }))).rejects.toMatchObject({
+      status: 409,
+      code: 'p2e.insufficient_funds',
+    });
+    expect(ledger.withdrawals).toEqual([]);
+    expect(await ledger.balanceFor(1)).toBe(10_000_000_000n);
+  });
+
+  it('400s below the minimum withdrawal', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    ledger.wallets.set(1, WALLET);
+    await creditP2e(1, 50_000_000_000n, 'deposit', 'sig1');
+    await expect(handler()(withdrawCtx({ amount: '1' }))).rejects.toMatchObject({
+      status: 400,
+      code: 'p2e.below_minimum',
+    });
+  });
+
+  it.each([['-5'], ['1.5'], ['abc'], ['0'], ['']])('400s a malformed amount %j', async (amount) => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    ledger.wallets.set(1, WALLET);
+    await expect(handler()(withdrawCtx({ amount }))).rejects.toMatchObject({
+      code: 'p2e.invalid_input',
+    });
   });
 });

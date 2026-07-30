@@ -8075,6 +8075,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'apiError.ota_updates.invalid_input': '입력이 올바르지 않습니다.',
   'apiError.p2e.invalid_input': '입력이 올바르지 않습니다.',
   'apiError.p2e.insufficient_funds': '토큰이 부족합니다.',
+  'apiError.p2e.wallet_not_linked': '먼저 지갑을 연결하세요.',
+  'apiError.p2e.below_minimum': '금액이 최소 한도보다 적습니다.',
   'apiError.steam.disabled': '현재 Steam 연동을 사용할 수 없습니다.',
   'apiError.wallet.handoff_invalid':
     '지갑 인증이 만료되었거나 확인할 수 없습니다. 다시 시도해 주세요.',

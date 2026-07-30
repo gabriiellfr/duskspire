@@ -2934,7 +2934,9 @@ export const zh_TW: EnTranslations = {
     },
     "p2e": {
       "invalid_input": "輸入無效。",
-      "insufficient_funds": "代幣不足。"
+      "insufficient_funds": "代幣不足。",
+      "wallet_not_linked": "請先綁定錢包。",
+      "below_minimum": "金額低於最低限額。"
     }
   },
   "guide": {

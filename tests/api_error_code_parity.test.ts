@@ -104,6 +104,8 @@ const KNOWN_CODES = [
   'ota_updates.invalid_input',
   'p2e.invalid_input',
   'p2e.insufficient_funds',
+  'p2e.wallet_not_linked',
+  'p2e.below_minimum',
 ];
 
 // The parametric contract pins: the matcher

@@ -2934,7 +2934,9 @@ export const pl_PL: EnTranslations = {
     },
     "p2e": {
       "invalid_input": "Invalid input.",
-      "insufficient_funds": "Not enough tokens."
+      "insufficient_funds": "Not enough tokens.",
+      "wallet_not_linked": "Link a wallet first.",
+      "below_minimum": "Amount is below the minimum."
     }
   },
   "guide": {

@@ -120,6 +120,8 @@ export const API_ERROR_KEYS = {
   'ota_updates.invalid_input': 'apiError.ota_updates.invalid_input',
   'p2e.invalid_input': 'apiError.p2e.invalid_input',
   'p2e.insufficient_funds': 'apiError.p2e.insufficient_funds',
+  'p2e.wallet_not_linked': 'apiError.p2e.wallet_not_linked',
+  'p2e.below_minimum': 'apiError.p2e.below_minimum',
 } satisfies Record<string, TranslationKey>;
 
 /** The message of an Error, or the string form of any other thrown value. */

@@ -2934,7 +2934,9 @@ export const ru_RU: EnTranslations = {
     },
     "p2e": {
       "invalid_input": "Недопустимые данные.",
-      "insufficient_funds": "Недостаточно токенов."
+      "insufficient_funds": "Недостаточно токенов.",
+      "wallet_not_linked": "Сначала привяжите кошелёк.",
+      "below_minimum": "Сумма меньше минимальной."
     }
   },
   "guide": {

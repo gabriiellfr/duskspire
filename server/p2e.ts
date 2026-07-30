@@ -7,18 +7,25 @@
 // idempotent by ref (a chain signature, a match id) and can never overdraw;
 // both guarantees live in the SQL transaction (p2e_db.ts), not in caller
 // discipline. The REST surface is read-only: balance and ledger history.
-import { accountAndScopeForToken, moderationStatusForAccount } from './db';
+import { accountAndScopeForToken, moderationStatusForAccount, walletForAccount } from './db';
 import { HttpError } from './http/errors';
-import { type BearerActiveGuardDb, createReadGuard } from './http/middleware/bearer_active_guard';
-import { type Infer, num, object, optional } from './http/schema';
+import {
+  type BearerActiveGuardDb,
+  createActiveGuard,
+  createReadGuard,
+} from './http/middleware/bearer_active_guard';
+import { withBody } from './http/middleware/body';
+import { type Infer, num, object, optional, str } from './http/schema';
 import type { Ctx, RouteDef } from './http/types';
 import { json } from './http_util';
 import {
   type P2eLedgerEntry,
   type P2eMutationOutcome,
+  type P2eWithdrawalOutcome,
   p2eApplyMutation,
   p2eBalanceFor,
   p2eLedgerPage,
+  p2eRequestWithdrawal,
 } from './p2e_db';
 
 // The db seam: the bearer guard reads plus the ledger reads/mutation. The
@@ -36,6 +43,13 @@ export interface P2eDb extends BearerActiveGuardDb {
     reason: string,
     ref: string | null,
   ): Promise<P2eMutationOutcome>;
+  requestWithdrawal(
+    accountId: number,
+    amount: bigint,
+    destination: string,
+  ): Promise<P2eWithdrawalOutcome>;
+  /** The account's linked wallet pubkey, or null when none is linked. */
+  linkedWallet(accountId: number): Promise<string | null>;
 }
 
 const REAL_P2E_DB: P2eDb = {
@@ -44,6 +58,8 @@ const REAL_P2E_DB: P2eDb = {
   balanceFor: p2eBalanceFor,
   ledgerPage: p2eLedgerPage,
   applyMutation: p2eApplyMutation,
+  requestWithdrawal: p2eRequestWithdrawal,
+  linkedWallet: async (accountId) => (await walletForAccount(accountId))?.pubkey ?? null,
 };
 let p2eDb: P2eDb = REAL_P2E_DB;
 
@@ -129,6 +145,48 @@ async function ledgerHandler(ctx: Ctx): Promise<void> {
   json(ctx.res, 200, { entries, page, pageSize, hasMore });
 }
 
+// Withdrawals need a FULL-scope session (a read token must never move funds).
+const fullAuthGuard = createActiveGuard(() => p2eDb);
+
+// Minimum withdrawal in base units (economy.md section 7): default 10 SPIRE.
+export function withdrawMinBase(): bigint {
+  const raw = (process.env.P2E_WITHDRAW_MIN_BASE ?? '').trim();
+  return /^\d+$/.test(raw) && BigInt(raw) > 0n ? BigInt(raw) : 10_000_000_000n;
+}
+
+export const p2eWithdrawBodySchema = object({
+  // Base units as a decimal string (a JSON number cannot hold the range).
+  amount: str({ maxLength: 24 }),
+});
+export type P2eWithdrawBody = Infer<typeof p2eWithdrawBodySchema>;
+
+/**
+ * POST /api/p2e/withdraw: debit the ledger and queue an on-chain payout to the
+ * caller's LINKED wallet (never a caller-supplied destination: a session
+ * hijack must not be able to redirect funds). The payout worker sends it.
+ */
+async function withdrawHandler(ctx: Ctx): Promise<void> {
+  const decoded = p2eWithdrawBodySchema.decode(ctx.body);
+  if (!decoded.ok) throw decoded;
+  const raw = decoded.value.amount.trim();
+  if (!/^\d+$/.test(raw) || BigInt(raw) <= 0n) {
+    throw new HttpError(400, 'p2e.invalid_input');
+  }
+  const amount = BigInt(raw);
+  if (amount < withdrawMinBase()) throw new HttpError(400, 'p2e.below_minimum');
+  const accountId = accountIdOf(ctx);
+  const destination = await p2eDb.linkedWallet(accountId);
+  if (destination === null) throw new HttpError(409, 'p2e.wallet_not_linked');
+  const outcome = await p2eDb.requestWithdrawal(accountId, amount, destination);
+  if (!outcome.ok) throw new HttpError(409, 'p2e.insufficient_funds');
+  json(ctx.res, 200, {
+    id: outcome.id,
+    balance: outcome.balance.toString(),
+    destination,
+    status: 'pending',
+  });
+}
+
 export const routes: RouteDef[] = [
   {
     method: 'GET',
@@ -143,5 +201,12 @@ export const routes: RouteDef[] = [
     surface: 'api',
     middleware: [authGuard],
     handler: ledgerHandler,
+  },
+  {
+    method: 'POST',
+    path: '/api/p2e/withdraw',
+    surface: 'api',
+    middleware: [fullAuthGuard, withBody()],
+    handler: withdrawHandler,
   },
 ];

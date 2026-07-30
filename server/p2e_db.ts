@@ -35,6 +35,26 @@ CREATE TABLE IF NOT EXISTS p2e_indexer_state (
   value TEXT NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Withdrawal queue: the request debits the ledger in the SAME transaction that
+-- inserts the row (ref 'withdraw:<id>'), then the external payout worker
+-- (chain/src/payout_worker.ts, the Daily Rewards private-payout pattern) sends
+-- the on-chain transfer and stamps sent/tx_signature. A 'failed' row keeps its
+-- debit and waits for operator action (re-run or manual re-credit by ref):
+-- funds can be delayed, never duplicated. Financial audit: KEEP FOREVER,
+-- deliberately no retention registration; account_id survives account deletion.
+CREATE TABLE IF NOT EXISTS p2e_withdrawals (
+  id BIGSERIAL PRIMARY KEY,
+  account_id INT REFERENCES accounts(id) ON DELETE SET NULL,
+  amount BIGINT NOT NULL CHECK (amount > 0),
+  destination TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  sent_at TIMESTAMPTZ,
+  tx_signature TEXT,
+  failure TEXT
+);
+CREATE INDEX IF NOT EXISTS p2e_withdrawals_status ON p2e_withdrawals(status, id);
+CREATE INDEX IF NOT EXISTS p2e_withdrawals_account ON p2e_withdrawals(account_id, id DESC);
 `;
 
 export interface P2eLedgerEntry {
@@ -91,6 +111,54 @@ export async function p2eLedgerPage(
   );
   const rows = res.rows as LedgerRow[];
   return { entries: rows.slice(0, limit).map(rowToEntry), hasMore: rows.length > limit };
+}
+
+export type P2eWithdrawalOutcome =
+  | { ok: true; id: string; balance: bigint }
+  | { ok: false; error: 'insufficient_funds' };
+
+// Withdrawal request: the queue row insert and the ledger debit are ONE
+// transaction (same in-statement overdraft guard as p2eApplyMutation), so a
+// queued withdrawal always has its debit and a refused debit leaves no row.
+// The ledger ref 'withdraw:<id>' ties the debit to the queue row for
+// reconciliation and makes any operator re-credit idempotent by ref.
+export async function p2eRequestWithdrawal(
+  accountId: number,
+  amount: bigint,
+  destination: string,
+): Promise<P2eWithdrawalOutcome> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const inserted = await client.query(
+      `INSERT INTO p2e_withdrawals (account_id, amount, destination)
+         VALUES ($1, $2, $3) RETURNING id`,
+      [accountId, amount.toString(), destination],
+    );
+    const id = String(inserted.rows[0].id);
+    const updated = await client.query(
+      `UPDATE p2e_balances SET balance = balance - $2, updated_at = now()
+         WHERE account_id = $1 AND balance - $2 >= 0 RETURNING balance`,
+      [accountId, amount.toString()],
+    );
+    if (updated.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return { ok: false, error: 'insufficient_funds' };
+    }
+    const balance = BigInt(updated.rows[0].balance);
+    await client.query(
+      `INSERT INTO p2e_ledger (account_id, delta, balance_after, reason, ref)
+         VALUES ($1, $2, $3, 'withdraw_request', $4)`,
+      [accountId, (-amount).toString(), balance.toString(), `withdraw:${id}`],
+    );
+    await client.query('COMMIT');
+    return { ok: true, id, balance };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function p2eIndexerCursor(key: string): Promise<string | null> {

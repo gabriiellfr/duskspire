@@ -195,6 +195,8 @@ export const ERROR_CODES = deepFreeze({
   'ota_updates.invalid_input': { params: [] },
   'p2e.invalid_input': { params: [] },
   'p2e.insufficient_funds': { params: [] },
+  'p2e.wallet_not_linked': { params: [] },
+  'p2e.below_minimum': { params: [] },
 } as const);
 
 /** A stable error code: one of the keys of ERROR_CODES. */

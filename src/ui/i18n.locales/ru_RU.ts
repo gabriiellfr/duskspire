@@ -8220,6 +8220,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'apiError.ota_updates.invalid_input': 'Недопустимые данные.',
   'apiError.p2e.invalid_input': 'Недопустимые данные.',
   'apiError.p2e.insufficient_funds': 'Недостаточно токенов.',
+  'apiError.p2e.wallet_not_linked': 'Сначала привяжите кошелёк.',
+  'apiError.p2e.below_minimum': 'Сумма меньше минимальной.',
   'apiError.steam.disabled': 'Привязка Steam сейчас недоступна.',
   'apiError.wallet.handoff_invalid':
     'Срок действия авторизации кошелька истек или ее не удалось проверить. Повторите попытку.',

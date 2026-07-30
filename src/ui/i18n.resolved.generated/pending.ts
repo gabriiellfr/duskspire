@@ -10,69 +10,99 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "es_ES": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "fr_FR": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "fr_CA": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "en_CA": [],
   "it_IT": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "de_DE": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "zh_CN": [],
   "zh_TW": [],
   "ko_KR": [],
   "ja_JP": [],
   "pt_BR": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "ru_RU": [],
   "cs_CZ": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "nl_NL": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "pl_PL": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "id_ID": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "tr_TR": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "sv_SE": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "vi_VN": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ],
   "da_DK": [
+    "apiError.p2e.below_minimum",
     "apiError.p2e.insufficient_funds",
-    "apiError.p2e.invalid_input"
+    "apiError.p2e.invalid_input",
+    "apiError.p2e.wallet_not_linked"
   ]
 };

@@ -75,6 +75,8 @@ const EXPECTED_CODES = [
   'ota_updates.invalid_input',
   'p2e.invalid_input',
   'p2e.insufficient_funds',
+  'p2e.wallet_not_linked',
+  'p2e.below_minimum',
 ];
 
 describe('ERROR_CODES catalog', () => {

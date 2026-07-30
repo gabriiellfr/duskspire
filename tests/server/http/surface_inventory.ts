@@ -1191,6 +1191,16 @@ export const SURFACE_INVENTORY: readonly SurfaceRoute[] = [
   {
     dispatcher: DISPATCH.mainApi,
     method: 'POST',
+    path: '/api/p2e/withdraw',
+    handler: 'server/p2e.ts withdrawHandler (registry-only RouteDef)',
+    contentType: PROBLEM_JSON,
+    authScope: AUTH_SCOPE.full,
+    limiter: null,
+    requireOwnedExpected: null,
+  },
+  {
+    dispatcher: DISPATCH.mainApi,
+    method: 'POST',
     path: '/api/card',
     handler: 'handleApi arm: /api/card (handleCardUpload)',
     contentType: BINARY,

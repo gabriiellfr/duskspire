@@ -115,6 +115,7 @@ const REGISTRY_ONLY_PATHS = new Set<string>([
   '/api/ota/updates',
   '/api/p2e/balance',
   '/api/p2e/ledger',
+  '/api/p2e/withdraw',
 ]);
 
 // Every legacy /api ladder row (dispatcher === main handleApi), minus the
@@ -321,6 +322,7 @@ describe('registry completeness: migrated baseline (public reads + auth + charac
     // deeds pair (the fork's SPIRE economy book, read-only surface).
     { method: 'GET', path: '/api/p2e/balance' },
     { method: 'GET', path: '/api/p2e/ledger' },
+    { method: 'POST', path: '/api/p2e/withdraw' },
     // v0.20.0: the paginated daily leaderboard read (the ops-side sibling is
     // asserted with the internal family below).
     { method: 'GET', path: '/api/daily-rewards/leaderboard' },

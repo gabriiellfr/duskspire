@@ -2934,7 +2934,9 @@ export const ja_JP: EnTranslations = {
     },
     "p2e": {
       "invalid_input": "入力が無効です。",
-      "insufficient_funds": "トークンが不足しています。"
+      "insufficient_funds": "トークンが不足しています。",
+      "wallet_not_linked": "先にウォレットを連携してください。",
+      "below_minimum": "金額が最低額を下回っています。"
     }
   },
   "guide": {
