@@ -54,6 +54,18 @@
       "step": "withdraw:payout",
       "signature": "5YNjpcqZ2Ws4ZGEbV2qprnBd28FK9JdDRgv9QVs1FNzxEzWKcKMjHfRH1TN9BvWgyrdTZfzmjoFu2kSRuizbVeG7",
       "note": "treasury -> player 250 SPIRE (verified on-chain)"
+    },
+    {
+      "at": "2026-07-30T15:40:15.083Z",
+      "step": "deposit:seed-player",
+      "signature": "274Bp8beYuMbqHRhVEduQZqK9oAsdGPwZ7aZK9KnMQvcirVZhb7tWaiQhkmV9S17nwDq9adSAFNVvZF86ciLkFhr",
+      "note": "treasury -> player 500 SPIRE (stand-in for a DEX buy)"
+    },
+    {
+      "at": "2026-07-30T15:40:15.999Z",
+      "step": "deposit:player-deposit",
+      "signature": "2UQkNh8VzNzmfsNdq9n8f6MutjrW7WefBtXRaodFjUrgZ4na19bXF2WBiXsMHJaY3BpWyj9JLMpejUdkPptRVytZ",
+      "note": "player -> treasury 100 SPIRE, memo dsk1:deposit:JBVzPhtk:1785426015086"
     }
   ],
   "authority": "PrQaEVnKHofJpW2agPVRW1btfVWHMFjPBxwWkZwM5MV",
