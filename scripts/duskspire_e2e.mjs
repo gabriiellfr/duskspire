@@ -18,7 +18,7 @@ mkdirSync('tmp', { recursive: true });
 const browser = await puppeteer.launch({
   executablePath: BROWSER_PATH,
   headless: 'new',
-  args: ['--use-angle=swiftshader', '--window-size=1600,900'],
+  args: ['--window-size=1600,900', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
   defaultViewport: { width: 1600, height: 900 },
 });
 const page = await browser.newPage();
@@ -48,13 +48,13 @@ check(
   world.zones?.length === 1 && world.zones[0] === 'eastbrook_vale',
 );
 check(
-  'terrain grid is city-sized 6x6, not the 14-zone strip',
-  world.grid.countX === 6 && world.grid.countZ === 6,
+  'terrain grid is the compact city band 4x4, not the 14-zone strip',
+  world.grid.countX === 4 && world.grid.countZ === 4,
   `${world.grid.countX}x${world.grid.countZ}`,
 );
 check(
   'grid origin matches the city band',
-  world.grid.originX === -180 && world.grid.originZ === -180,
+  world.grid.originX === -120 && world.grid.originZ === -120,
 );
 check(
   'player spawned at the city start',

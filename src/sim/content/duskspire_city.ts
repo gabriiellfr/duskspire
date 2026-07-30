@@ -1,22 +1,22 @@
 // The Duskspire city world (docs/p2e/PLAN.md Phase 1): the fork's launch map.
-// One zone, no overworld beyond it: the Eastbrook town square is the social
-// hub (vendors, bank, mail, market, stations, the noticeboard), and the vale
-// around it is the practice outskirts whose camps give new players their
-// first combat loop; everything deeper (dungeons, delves, the arena) is
-// instanced content reached from here.
+// ONE compact city band and nothing beyond it: the Eastbrook town square is
+// the social hub (vendors, bank, mail, market, stations, the noticeboard),
+// the walled outskirts inside the band carry the starter camps and the Hollow
+// Crypt door at the chapel ruin (80, 90), and the band edge is fenced with
+// invisible blocker walls, so the rest of the original overworld neither
+// renders nor exists for play. The terrain chunk grid derives from this
+// zone's rect (render/terrain.ts), so the band IS the rendered world:
+// 240x240 = 16 chunks versus the original strip's 792 cells.
 //
-// Data-as-code, assembled from the zone 1 content the base game already ships
-// (nothing is redefined, so upstream zone 1 fixes flow into the city for
-// free). Injected the same way the editor injects a custom map: pass it as
-// SimConfig.world AND call setActiveWorldContent with it (the sim reads
-// spawns from config, terrain/render read the data.ts registry; see the
-// WorldContent doc comment in types.ts).
+// Data-as-code, assembled by FILTERING the zone 1 content the base game
+// ships to the band (nothing redefined, so upstream fixes flow in). Injected
+// like an editor map: SimConfig.world plus setActiveWorldContent.
 //
-// Camp ORDER is a determinism contract (the Sim draws the shared Rng in array
-// order): zone 1 camps, chapel camps, then the Tunnelking, mirroring their
-// relative order in the built-in CAMPS table. Append only.
+// Camp ORDER is a determinism contract (the Sim draws the shared Rng in
+// array order): the band filter preserves the built-in relative order
+// (zone 1 camps, chapel camps, the Tunnelking). Append only, never reorder.
 import { EASTBROOK_LAYOUT } from '../eastbrook_layout';
-import type { CampDef, WorldContent } from '../types';
+import type { BlockerDef, CampDef, NpcDef, WorldContent, ZoneDef } from '../types';
 import { OVERWORLD_GRAVEYARDS } from './graveyards';
 import { MAILBOXES } from './mailboxes';
 import { NOTICEBOARDS } from './noticeboards';
@@ -31,12 +31,27 @@ import {
   ZONE1_ZONE,
 } from './zone1';
 
-const inZoneBand = (pos: { z: number }): boolean =>
-  pos.z >= ZONE1_ZONE.zMin && pos.z < ZONE1_ZONE.zMax;
+/** Half-width of the square city band, in world units. */
+export const CITY_BAND = 120;
+// The fence sits just inside the last rendered chunk row, so a player always
+// stands on visible ground when they hit it.
+const FENCE = CITY_BAND - 2;
 
-// The Tunnelking rare: defined inline in the built-in CAMPS table (data.ts),
-// not in a zone module, so the city re-declares it verbatim. Position is
-// inside the vale band.
+const inBand = (x: number, z: number, margin = 0): boolean =>
+  Math.abs(x) <= CITY_BAND - margin && Math.abs(z) <= CITY_BAND - margin;
+
+export const DUSKSPIRE_CITY_ZONE: ZoneDef = {
+  ...ZONE1_ZONE,
+  xMin: -CITY_BAND,
+  xMax: CITY_BAND,
+  zMin: -CITY_BAND,
+  zMax: CITY_BAND,
+  pois: ZONE1_ZONE.pois.filter((p) => inBand(p.x, p.z)),
+  lakes: ZONE1_ZONE.lakes.filter((l) => inBand(l.x, l.z)),
+};
+
+// The Tunnelking rare (declared inline in the built-in CAMPS table): its dig
+// sits inside the band, so the city keeps it, in its built-in order slot.
 const GRIX_CAMP: CampDef = {
   mobId: 'grix_the_tunnelking',
   center: { x: -95, z: -78 },
@@ -44,18 +59,38 @@ const GRIX_CAMP: CampDef = {
   count: 1,
 };
 
+// A camp stays only when its whole spawn circle fits inside the band, so no
+// mob ever spawns past the fence on unrendered ground.
+const campInBand = (c: CampDef): boolean => inBand(c.center.x, c.center.z, c.radius);
+
+const NPCS_IN_BAND: Record<string, NpcDef> = Object.fromEntries(
+  Object.entries(ZONE1_NPCS).filter(([, npc]) => inBand(npc.pos.x, npc.pos.z)),
+);
+
+// The invisible edge fence: four blocker walls just inside the band edge.
+const FENCE_BLOCKERS: BlockerDef[] = [
+  { x1: -FENCE, z1: -FENCE, x2: FENCE, z2: -FENCE }, // south
+  { x1: -FENCE, z1: FENCE, x2: FENCE, z2: FENCE }, // north
+  { x1: -FENCE, z1: -FENCE, x2: -FENCE, z2: FENCE }, // west
+  { x1: FENCE, z1: -FENCE, x2: FENCE, z2: FENCE }, // east
+];
+
 export const DUSKSPIRE_CITY: WorldContent = {
-  zones: [ZONE1_ZONE],
-  camps: [...ZONE1_CAMPS, ...ZONE1_CHAPEL_CAMPS, GRIX_CAMP],
-  npcs: ZONE1_NPCS,
-  groundObjects: ZONE1_OBJECTS,
-  roads: ZONE1_ROADS,
+  zones: [DUSKSPIRE_CITY_ZONE],
+  camps: [...ZONE1_CAMPS, ...ZONE1_CHAPEL_CAMPS, GRIX_CAMP].filter(campInBand),
+  npcs: NPCS_IN_BAND,
+  groundObjects: ZONE1_OBJECTS.map((o) => ({
+    ...o,
+    positions: o.positions.filter((p) => inBand(p.x, p.z)),
+  })).filter((o) => o.positions.length > 0),
+  roads: ZONE1_ROADS.filter((road) => road.every((p) => inBand(p.x, p.z))),
   props: ZONE1_PROPS,
   playerStart: { ...EASTBROOK_LAYOUT.services.playerStart.position },
   services: {
     stations: STATIONS.filter((s) => s.zoneId === ZONE1_ZONE.id),
-    mailboxes: MAILBOXES.filter(inZoneBand),
-    noticeboards: NOTICEBOARDS.filter(inZoneBand),
-    graveyards: OVERWORLD_GRAVEYARDS.filter(inZoneBand),
+    mailboxes: MAILBOXES.filter((m) => inBand(m.x, m.z)),
+    noticeboards: NOTICEBOARDS.filter((n) => inBand(n.x, n.z)),
+    graveyards: OVERWORLD_GRAVEYARDS.filter((g) => inBand(g.x, g.z)),
   },
+  blockers: FENCE_BLOCKERS,
 };

@@ -20,7 +20,7 @@
 // src/sim-pure: no DOM/render imports, no Math.random/Date.now; reads world
 // state through the SimContext seam only.
 
-import { ESCORTS, MOBS, QUESTS } from './data';
+import { ESCORTS, getActiveWorldContent, MOBS, QUESTS, STRIP_MAX_X, STRIP_MIN_X } from './data';
 import { createMob } from './entity';
 import { emitMobYell } from './mob/yells';
 import type { PlayerMeta } from './sim';
@@ -91,8 +91,22 @@ function spawnEscortee(ctx: SimContext, def: EscortDef, state: EscortRunState): 
 
 // World-init hook: spawn every escort def's idle escortee. Runs after the rest
 // of world generation and draws no rng, so existing spawns stay byte-stable.
+// Fork (Duskspire): only escorts whose start lies inside the ACTIVE world's
+// zones spawn, so a compact custom world (the city band) does not seed
+// escortees on ground it does not contain. The built-in world contains every
+// escort start, so its spawns are unchanged; the filter draws no rng.
 export function initEscorts(ctx: SimContext): void {
+  const zones = getActiveWorldContent().zones;
+  const inActiveWorld = (p: { x: number; z: number }): boolean =>
+    zones.some(
+      (zn) =>
+        p.x >= (zn.xMin ?? STRIP_MIN_X) &&
+        p.x < (zn.xMax ?? STRIP_MAX_X) &&
+        p.z >= zn.zMin &&
+        p.z < zn.zMax,
+    );
   for (const def of Object.values(ESCORTS)) {
+    if (!inActiveWorld(def.start)) continue;
     spawnEscortee(ctx, def, escortState(ctx, def.id));
   }
 }
