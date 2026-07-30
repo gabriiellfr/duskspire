@@ -38,9 +38,14 @@ function instructionsOf(tx: unknown): ParsedInstruction[] {
 function memoOf(instructions: ParsedInstruction[]): string | null {
   for (const ins of instructions) {
     if (ins.program !== 'spl-memo') continue;
-    if (typeof ins.parsed === 'string' && ins.parsed.startsWith(DEPOSIT_MEMO_PREFIX)) {
-      return ins.parsed;
-    }
+    if (typeof ins.parsed !== 'string') continue;
+    // Live-devnet finding (tx 2UQkNh8V...): the umi toolbox addMemo serializer
+    // writes the string with a 4-byte little-endian length prefix, so the
+    // parsed memo arrives as "#\0\0\0dsk1:deposit:...". Match the marker
+    // anywhere and return the clean suffix, so both raw and length-prefixed
+    // memo encodings parse.
+    const idx = ins.parsed.indexOf(DEPOSIT_MEMO_PREFIX);
+    if (idx >= 0) return ins.parsed.slice(idx);
   }
   return null;
 }

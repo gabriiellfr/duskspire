@@ -51,6 +51,8 @@ export interface DepositIndexerDeps {
 export interface DepositIndexerConfig {
   treasuryAta: string;
   mint: string;
+  /** Pause between per-transaction RPC reads (devnet public RPCs 429 hard). */
+  interTxDelayMs?: number;
 }
 
 export interface DepositScanResult {
@@ -58,6 +60,8 @@ export interface DepositScanResult {
   credited: number;
   skippedUnlinked: number;
   skippedForeign: number;
+  /** 1 when the scan halted on a listed-but-unfetchable transaction. */
+  haltedMissingTx: number;
 }
 
 /** One scan pass: list new signatures since the cursor, credit every deposit. */
@@ -70,6 +74,7 @@ export async function runDepositScan(
     credited: 0,
     skippedUnlinked: 0,
     skippedForeign: 0,
+    haltedMissingTx: 0,
   };
   const cursor = await deps.getCursor();
   const listed = await deps.rpc('getSignaturesForAddress', [
@@ -94,6 +99,9 @@ export async function runDepositScan(
       await deps.setCursor(entry.signature);
       continue;
     }
+    if (cfg.interTxDelayMs && cfg.interTxDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, cfg.interTxDelayMs));
+    }
     const tx = await deps.rpc('getTransaction', [
       entry.signature,
       {
@@ -102,6 +110,14 @@ export async function runDepositScan(
         maxSupportedTransactionVersion: 0,
       },
     ]);
+    if (tx === null || tx === undefined) {
+      // Listed but not fetchable (finalization lag, a node behind the one that
+      // listed it). Classifying it foreign would advance the cursor PAST a
+      // possibly real deposit forever (live-rehearsal finding); halt instead
+      // and retry the whole tail next pass.
+      result.haltedMissingTx = 1;
+      break;
+    }
     const deposit = parseDepositTransaction(tx, cfg.treasuryAta, cfg.mint);
     if (deposit === null) {
       result.skippedForeign++;
@@ -173,7 +189,11 @@ export function startDepositIndexer(): () => void {
   let timer: NodeJS.Timeout | null = null;
   const tick = async (): Promise<void> => {
     try {
-      const outcome = await runDepositScan(REAL_DEPS, { treasuryAta, mint });
+      const outcome = await runDepositScan(REAL_DEPS, {
+        treasuryAta,
+        mint,
+        interTxDelayMs: 250,
+      });
       if (outcome.credited > 0 || outcome.skippedUnlinked > 0) {
         logger.info({ ...outcome }, 'p2e deposit scan');
       }
