@@ -175,6 +175,8 @@ import {
   RIFT_SLOT_COUNT,
   riftInstanceOrigin,
   SPIRIT_HEALER_NPC_ID,
+  STRIP_MAX_X,
+  STRIP_MIN_X,
   zoneAt,
 } from './data';
 import * as deedsMod from './deeds';
@@ -2408,6 +2410,23 @@ export class Sim {
       // saves: migration is collision-only and uses the real player body radius,
       // while instance/delve exits above retain their established behavior.
       savedPos = this.findSafePos(savedPos.x, savedPos.z, -Infinity, PLAYER_BODY_RADIUS);
+    }
+    // Fork (Duskspire): a CUSTOM world (cfg.world) may be smaller than the
+    // world a character was saved in. An overworld save outside every zone of
+    // the active world rejoins at the world's player start instead of on
+    // ground that no longer exists (instance saves were already resolved to
+    // doors above). The built-in world contains every legal save, so this
+    // never fires there.
+    if (savedPos && this.cfg.world) {
+      const pos = savedPos;
+      const insideWorld = this.worldContent.zones.some(
+        (zn) =>
+          pos.x >= (zn.xMin ?? STRIP_MIN_X) &&
+          pos.x < (zn.xMax ?? STRIP_MAX_X) &&
+          pos.z >= zn.zMin &&
+          pos.z < zn.zMax,
+      );
+      if (!insideWorld) savedPos = null;
     }
     const playerStart = this.worldContent.playerStart;
     const startPos = savedPos

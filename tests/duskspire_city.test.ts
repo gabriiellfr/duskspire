@@ -128,6 +128,28 @@ describe('the sim runs the compact city world', () => {
     expect(p.pos.z).toBeLessThan(CITY_BAND);
   });
 
+  it('an out-of-band saved position rejoins at the city start', () => {
+    const sim = citySim();
+    const pid = sim.addPlayer('warrior', 'Farwanderer', {
+      state: {
+        pos: { x: 0, z: 400 },
+        questLog: [],
+        questsDone: [],
+        inventory: [],
+        equipment: {},
+        level: 3,
+        xp: 0,
+        money: 0,
+      } as never,
+    });
+    const p = sim.entities.get(pid);
+    expect(p).toBeDefined();
+    expect(Math.abs(p?.pos.x ?? 999)).toBeLessThanOrEqual(CITY_BAND);
+    expect(Math.abs(p?.pos.z ?? 999)).toBeLessThanOrEqual(CITY_BAND);
+    expect(p?.pos.x).toBeCloseTo(DUSKSPIRE_CITY.playerStart.x, 0);
+    expect(p?.pos.z).toBeCloseTo(DUSKSPIRE_CITY.playerStart.z, 0);
+  });
+
   it('ticks 1000 times deterministically (same seed, same stream and state)', () => {
     const run = (): string => {
       const sim = citySim();

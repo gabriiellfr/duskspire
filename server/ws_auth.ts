@@ -26,7 +26,7 @@ import {
 // served world (see onlineWorldAuthType), so a vanilla client cannot join a
 // city-world realm or vice versa; both directions classify as an incompatible
 // world layout through the startsWith('auth-world-') arm below.
-const EXPECTED_AUTH_TYPE = onlineWorldAuthType(process.env.DUSKSPIRE_WORLD === '1');
+const EXPECTED_AUTH_TYPE = onlineWorldAuthType(duskspireWorldEnabled());
 
 import type {
   AccountChatMuteStatus,
@@ -35,6 +35,7 @@ import type {
   CharacterRow,
   TokenScope,
 } from './db';
+import { duskspireWorldEnabled } from './duskspire_mode';
 import type { GameServer } from './game';
 
 // The {t:'error', error} rejection strings, by the exact value the client reads

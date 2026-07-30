@@ -135,6 +135,7 @@ import type {
   SalvageResultView,
 } from '../world_api/professions';
 import { computeBackoffDelay } from './backoff';
+import { DUSKSPIRE_WORLD_CLIENT } from './duskspire_mode';
 import { INPUT_SEND_TIMER_INTERVAL_MS, inputFlushGateOpen } from './input_send_cadence';
 import { createNetPipelineStats, type NetPipelineStats } from './net_pipeline_stats';
 import { optimisticQuestState } from './quest_state_optimistic';
@@ -233,7 +234,7 @@ export {
 // city world, so it must speak the matching discriminator (world_api.ts
 // onlineWorldAuthType); a mismatched server rejects it as an incompatible
 // world layout before character admission, in both directions.
-const CLIENT_AUTH_TYPE = onlineWorldAuthType(import.meta.env.VITE_DUSKSPIRE_WORLD === '1');
+const CLIENT_AUTH_TYPE = onlineWorldAuthType(DUSKSPIRE_WORLD_CLIENT);
 
 export function buildWebSocketAuthMessage(
   token: string,

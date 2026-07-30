@@ -94,6 +94,60 @@ console.log('pilot outcome:', JSON.stringify(outcome));
 check('pilot engaged and killed at least one mob hands-free', outcome.kills > 0 && !outcome.dead);
 check('pilot earned xp', outcome.xp > before.xp, `${before.xp} -> ${outcome.xp}`);
 
+// --- ONLINE: register, create a character, join over the real WS, and prove
+// the spawn lands inside the city band on the city-realm server. ---
+const SERVER = process.env.SERVER_URL ?? 'http://127.0.0.1:8787';
+const api = async (path, body, token) => {
+  const res = await fetch(SERVER + path, {
+    method: body ? 'POST' : 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return res.json();
+};
+const user = `duskproof${Date.now().toString(36)}`;
+const reg = await api('/api/register', {
+  username: user,
+  password: 'proofpass123',
+  email: `${user}@example.com`,
+});
+const alpha = Date.now().toString(36).replace(/[0-9]/g, 'a');
+const created = await api(
+  '/api/characters',
+  { name: `Proof${alpha}`.slice(0, 14), class: 'warrior' },
+  reg.token,
+);
+const charId = created.id ?? created.character?.id;
+check('online: account + character created on the city realm', Boolean(reg.token && charId));
+const { WebSocket } = await import('ws');
+const online = await new Promise((resolve) => {
+  const ws = new WebSocket(SERVER.replace(/^http/, 'ws') + '/ws');
+  let self = null;
+  ws.on('open', () =>
+    ws.send(JSON.stringify({ t: 'auth-world-3-dusk1', token: reg.token, character: charId })),
+  );
+  ws.on('message', (d) => {
+    const msg = JSON.parse(d.toString());
+    if (msg.t === 'error') resolve({ error: msg.error });
+    if (msg.t === 'snap' && msg.self) {
+      self = msg.self;
+      ws.close();
+      resolve({ self });
+    }
+  });
+  setTimeout(() => resolve({ error: 'timeout', self }), 15000);
+});
+if (online.error) console.log('online join error:', online.error);
+check('online: joined the city realm over the dusk discriminator', Boolean(online.self));
+check(
+  'online: spawned inside the city band',
+  Boolean(online.self) && Math.abs(online.self.x) <= 120 && Math.abs(online.self.z) <= 120,
+  online.self ? `(${online.self.x?.toFixed(1)}, ${online.self.z?.toFixed(1)})` : 'no snap',
+);
+
 await new Promise((r) => setTimeout(r, 1500));
 await page.screenshot({ path: 'tmp/duskspire-city-idle.png' });
 console.log('screenshot: tmp/duskspire-city-idle.png');

@@ -126,6 +126,7 @@ import {
   disconnectDesktopWalletSession,
 } from './net/desktop_wallet_manager';
 import { shouldEnterDiscordOnboarding } from './net/discord_onboarding_gate';
+import { DUSKSPIRE_WORLD_CLIENT } from './net/duskspire_mode';
 import { EconomyClient, newIdempotencyKey, startClaudiumPurchase } from './net/economy_sdk';
 // The wallet module is loaded lazily via dynamic import() in the wallet
 // controller below, so it stays out of the main entry chunk and only loads when
@@ -343,12 +344,18 @@ import type { IWorld, LeaderboardEntry } from './world_api';
 
 const WORLD_SEED = 20061; // fixed: World of ClaudeCraft is a persistent place
 
-// Fork (Duskspire): a VITE_DUSKSPIRE_WORLD=1 build renders the single-zone
-// city world in EVERY mode: offline runs it as SimConfig.world, and online
-// routes terrain/props at it too (the renderer reads the data.ts registry;
-// entities come from the server, which must be a DUSKSPIRE_WORLD=1 realm, and
-// the shifted WS discriminator in src/net/online.ts guarantees the pairing).
-const DUSKSPIRE_WORLD = import.meta.env.VITE_DUSKSPIRE_WORLD === '1';
+// Fork (Duskspire): the city world is the fork's DEFAULT game mode (see
+// src/net/duskspire_mode.ts for the resolution order): offline runs it as
+// SimConfig.world, and online routes terrain/props at it too (entities come
+// from the server, which defaults to the same mode, and the shifted WS
+// discriminator guarantees the pairing). The console banner is the one-line
+// proof of which mode this build booted.
+const DUSKSPIRE_WORLD = DUSKSPIRE_WORLD_CLIENT;
+console.info(
+  DUSKSPIRE_WORLD
+    ? '[duskspire] city world mode ACTIVE (set VITE_DUSKSPIRE_WORLD=0 to opt out)'
+    : '[duskspire] city world mode OFF (vanilla world)',
+);
 if (DUSKSPIRE_WORLD) setActiveWorldContent(DUSKSPIRE_CITY);
 const CLICK_MOVE_TURN_RATE = 4.2; // rad/sec; responsive turning while the camera stays decoupled from click spam
 const CLICK_MOVE_WAYPOINT_STOP = 0.8; // yards; intermediate A* corners should roll through, not stutter-stop

@@ -157,6 +157,7 @@ import { enqueueActivity } from './discord_activity';
 import { discordFlairForAccount, grantRewardPoints } from './discord_db';
 import { enqueueRelay } from './discord_relay';
 import { formatDuration } from './duration';
+import { duskspireWorldEnabled } from './duskspire_mode';
 import { shouldDeliverCombatEventToViewer } from './event_delivery';
 import { assembleEventsFrame, serializeEventFragments } from './event_frame';
 import { mergedPrsForLogin } from './github_contributors';
@@ -1512,11 +1513,17 @@ export class GameServer {
   private readonly riftAssets: RiftAssetCoordinator;
 
   constructor() {
-    // Fork (Duskspire): DUSKSPIRE_WORLD=1 serves the single-zone city world.
-    // Both wirings are required (the sim reads spawns from config, terrain
-    // reads the data.ts registry), and the WS discriminator shifts with the
-    // flag (ws_auth.ts) so only matching client builds are admitted.
-    const duskspireWorld = process.env.DUSKSPIRE_WORLD === '1';
+    // Fork (Duskspire): the city world is the fork's DEFAULT (opt out with
+    // DUSKSPIRE_WORLD=0; see server/duskspire_mode.ts). Both wirings are
+    // required (the sim reads spawns from config, terrain reads the data.ts
+    // registry), and the WS discriminator shifts with the mode (ws_auth.ts)
+    // so only matching client builds are admitted.
+    const duskspireWorld = duskspireWorldEnabled();
+    console.log(
+      duskspireWorld
+        ? '[duskspire] serving the CITY world (set DUSKSPIRE_WORLD=0 to opt out)'
+        : '[duskspire] serving the VANILLA world',
+    );
     if (duskspireWorld) setActiveWorldContent(DUSKSPIRE_CITY);
     this.sim = new Sim({
       seed: WORLD_SEED,
