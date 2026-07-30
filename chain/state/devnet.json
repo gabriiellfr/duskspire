@@ -1,0 +1,65 @@
+{
+  "cluster": "devnet",
+  "log": [
+    {
+      "at": "2026-07-30T13:52:24.870Z",
+      "step": "token:create",
+      "signature": "27xEx2bsWKNe3QJY7wXfNpHhhgUAab85jzPgw9WDZM94rjS3X2oMLGnwn9eW6CxV7q9uvXMBETQqWWWuaRaqNHLR",
+      "note": "SPIRE mint CuRbqB3kRedBpAT5VZDW1ATSRMSqdYnsixbTyw4PpCxE"
+    },
+    {
+      "at": "2026-07-30T13:52:25.745Z",
+      "step": "token:mint-supply",
+      "signature": "5KpVdgFWrWhbeabmE4NgZRnQtApsfRPxqGd2vCo8fSzYyf2gBmiw8sj4xQMDg1cmq8poE3mdMEe2B4eSajDnZesq",
+      "note": "minted 1000000000 SPIRE to treasury"
+    },
+    {
+      "at": "2026-07-30T13:52:26.372Z",
+      "step": "collections:heroes",
+      "signature": "TNAp8zq5JijXUbMbQwC2QhsNCZSMuTXoZzAQ8xVpaZsANS9oQis2QfBeC512E74dXPDny6zz5qGCknEQYzEqXH4",
+      "note": "CdpYx2NWyZPQATvSZrmpPKtcssYcmrhkGCkrkWz4MgR2"
+    },
+    {
+      "at": "2026-07-30T13:52:27.168Z",
+      "step": "collections:relics",
+      "signature": "5myhAkcpQBuJCEf7VrR26UEftPhsngRkcnMymJgT4LDjALspm8GJ3NAb61qzK3G3jcaHWi58V77urGmNWKcbuMA7",
+      "note": "J3ztno7oGgEvQ3Cbhf1s27ETaeh14DEX9gKyZAS3FS8V"
+    },
+    {
+      "at": "2026-07-30T13:52:28.174Z",
+      "step": "hero:mint",
+      "signature": "2o929TazcoG8kLNDxFnHKroWANRDHV6ogH42upu7VMzo7KWNbckF9oeY6FwQfVueW14tb33AEPeaUNcWMJnVpTXV",
+      "note": "hero NFT CBuHNTFcUnsNi9Kgw5knubHdGXkZ6gZM41jRVU8zvPHY owner JBVzPhtkRpsSZDR9gDH2gBj44GyvbQUGqpghSsTQzsxy"
+    },
+    {
+      "at": "2026-07-30T13:52:31.980Z",
+      "step": "deposit:seed-player",
+      "signature": "2nJFVxLicfZvYQCbdyPWnnvy6bLG91yWb7yFvousj8kUZTyS6DxbCRuNsGKeLkFtAvvcXfVkh26xT45vBv2q5Y1d",
+      "note": "treasury -> player 500 SPIRE (stand-in for a DEX buy)"
+    },
+    {
+      "at": "2026-07-30T13:53:09.736Z",
+      "step": "deposit:seed-player",
+      "signature": "3HjZjKgKtMcjW72kXvQwYUtKv5zJCcSXkPXYB9s2PcJ5DBb9LpXWLSfSzuzPcXnjSoMmjrkDmqjfH5VomXFvrCUn",
+      "note": "treasury -> player 500 SPIRE (stand-in for a DEX buy)"
+    },
+    {
+      "at": "2026-07-30T13:53:10.538Z",
+      "step": "deposit:player-deposit",
+      "signature": "3X6LCRgFGM1v6HpzakE7QEyegaznhfUw2BE7pDo8ZoeTpBkQDzsatkAsNvejSminF9CK1DMqfrNVWm1uegNgpP8v",
+      "note": "player -> treasury 100 SPIRE, memo dsk1:deposit:JBVzPhtk:1785419589739"
+    },
+    {
+      "at": "2026-07-30T13:53:12.472Z",
+      "step": "withdraw:payout",
+      "signature": "5YNjpcqZ2Ws4ZGEbV2qprnBd28FK9JdDRgv9QVs1FNzxEzWKcKMjHfRH1TN9BvWgyrdTZfzmjoFu2kSRuizbVeG7",
+      "note": "treasury -> player 250 SPIRE (verified on-chain)"
+    }
+  ],
+  "authority": "PrQaEVnKHofJpW2agPVRW1btfVWHMFjPBxwWkZwM5MV",
+  "demoPlayer": "JBVzPhtkRpsSZDR9gDH2gBj44GyvbQUGqpghSsTQzsxy",
+  "mint": "CuRbqB3kRedBpAT5VZDW1ATSRMSqdYnsixbTyw4PpCxE",
+  "heroCollection": "CdpYx2NWyZPQATvSZrmpPKtcssYcmrhkGCkrkWz4MgR2",
+  "relicCollection": "J3ztno7oGgEvQ3Cbhf1s27ETaeh14DEX9gKyZAS3FS8V",
+  "demoHeroAsset": "CBuHNTFcUnsNi9Kgw5knubHdGXkZ6gZM41jRVU8zvPHY"
+}

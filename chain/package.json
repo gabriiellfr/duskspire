@@ -1,0 +1,31 @@
+{
+  "name": "duskspire-chain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Duskspire on-chain workspace: SPIRE token, hero/relic NFT collections, deposit and withdraw flows, and devnet verification.",
+  "scripts": {
+    "e2e": "tsx src/e2e.ts",
+    "token": "tsx src/e2e.ts --step=token",
+    "collections": "tsx src/e2e.ts --step=collections",
+    "hero": "tsx src/e2e.ts --step=hero",
+    "deposit": "tsx src/e2e.ts --step=deposit",
+    "withdraw": "tsx src/e2e.ts --step=withdraw",
+    "status": "tsx src/e2e.ts --step=status"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@metaplex-foundation/mpl-core": "^1.4.0",
+    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
+    "@metaplex-foundation/mpl-toolbox": "^0.10.0",
+    "@metaplex-foundation/umi": "^1.2.0",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.2.0",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
