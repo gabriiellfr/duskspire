@@ -124,6 +124,7 @@ export const API_ERROR_KEYS = {
   'p2e.below_minimum': 'apiError.p2e.below_minimum',
   'p2e.roster_full': 'apiError.p2e.roster_full',
   'p2e.try_again': 'apiError.p2e.try_again',
+  'p2e.starter_claimed': 'apiError.p2e.starter_claimed',
 } satisfies Record<string, TranslationKey>;
 
 /** The message of an Error, or the string form of any other thrown value. */

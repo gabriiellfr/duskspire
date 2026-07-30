@@ -79,6 +79,7 @@ const EXPECTED_CODES = [
   'p2e.below_minimum',
   'p2e.roster_full',
   'p2e.try_again',
+  'p2e.starter_claimed',
 ];
 
 describe('ERROR_CODES catalog', () => {

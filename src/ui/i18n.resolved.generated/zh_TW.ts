@@ -2938,7 +2938,8 @@ export const zh_TW: EnTranslations = {
       "wallet_not_linked": "請先綁定錢包。",
       "below_minimum": "金額低於最低限額。",
       "roster_full": "你的英雄名冊已滿。",
-      "try_again": "發生問題，請重試。"
+      "try_again": "發生問題，請重試。",
+      "starter_claimed": "你已領取過新手英雄。"
     }
   },
   "guide": {

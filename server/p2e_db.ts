@@ -72,6 +72,11 @@ CREATE TABLE IF NOT EXISTS p2e_heroes (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS p2e_heroes_account ON p2e_heroes(account_id);
+-- Starter heroes (heroes.md section 4): free, never NFTs, never counted
+-- against the roster cap; at most one per account (the partial unique index).
+ALTER TABLE p2e_heroes ADD COLUMN IF NOT EXISTS is_starter BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE UNIQUE INDEX IF NOT EXISTS p2e_heroes_one_starter
+  ON p2e_heroes(account_id) WHERE is_starter;
 CREATE TABLE IF NOT EXISTS p2e_draws (
   id BIGSERIAL PRIMARY KEY,
   account_id INT REFERENCES accounts(id) ON DELETE SET NULL,
@@ -278,7 +283,7 @@ export async function p2eOpenHeroBox(
     const rosterCount = await client.query(
       `SELECT count(*)::int AS n FROM characters c
          JOIN p2e_heroes h ON h.character_id = c.id
-         WHERE c.account_id = $1 AND c.realm = $2`,
+         WHERE c.account_id = $1 AND c.realm = $2 AND NOT h.is_starter`,
       [accountId, REALM],
     );
     if (Number(rosterCount.rows[0]?.n ?? 0) >= rosterLimit) {
@@ -338,6 +343,80 @@ export async function p2eOpenHeroBox(
     // A concurrent global name claim raced the pre-check: retryable.
     if ((err as { code?: string }).code === '23505') {
       return { ok: false, error: 'name_collision' };
+    }
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+export interface P2eHeroView {
+  characterId: number;
+  name: string;
+  heroClass: string;
+  level: number;
+  rarity: string;
+  isStarter: boolean;
+  mintAddress: string | null;
+}
+
+/** The account's hero roster on this realm (starter + box heroes). */
+export async function p2eHeroRoster(accountId: number): Promise<P2eHeroView[]> {
+  const res = await pool.query(
+    `SELECT c.id, c.name, c.class, c.level, h.rarity, h.is_starter, h.mint_address
+       FROM p2e_heroes h JOIN characters c ON c.id = h.character_id
+       WHERE h.account_id = $1 AND c.realm = $2 ORDER BY c.id`,
+    [accountId, REALM],
+  );
+  return res.rows.map((row) => ({
+    characterId: Number(row.id),
+    name: row.name,
+    heroClass: row.class,
+    level: Number(row.level),
+    rarity: row.rarity,
+    isStarter: row.is_starter === true,
+    mintAddress: row.mint_address ?? null,
+  }));
+}
+
+export type P2eStarterOutcome =
+  | { ok: true; characterId: number }
+  | { ok: false; error: 'starter_claimed' | 'name_taken' };
+
+// The one free starter hero (heroes.md section 4): a common-rarity character
+// plus a starter-marked hero row, all-or-nothing. Uniqueness is enforced
+// IN-STATEMENT by the two unique indexes (one starter per account, global
+// character names); the 23505 catch maps the violated constraint back to the
+// caller's error, so a concurrent double-claim can never grant twice.
+export async function p2eGrantStarter(
+  accountId: number,
+  heroClass: string,
+  name: string,
+): Promise<P2eStarterOutcome> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const character = await client.query(
+      `INSERT INTO characters (account_id, name, class, realm, state)
+         VALUES ($1, $2, $3, $4, NULL) RETURNING id`,
+      [accountId, name, heroClass, REALM],
+    );
+    const characterId = Number(character.rows[0].id);
+    await client.query(
+      `INSERT INTO p2e_heroes (character_id, account_id, rarity, is_starter)
+         VALUES ($1, $2, 'common', TRUE)`,
+      [characterId, accountId],
+    );
+    await client.query('COMMIT');
+    return { ok: true, characterId };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    const pgErr = err as { code?: string; constraint?: string };
+    if (pgErr.code === '23505') {
+      return {
+        ok: false,
+        error: pgErr.constraint === 'p2e_heroes_one_starter' ? 'starter_claimed' : 'name_taken',
+      };
     }
     throw err;
   } finally {

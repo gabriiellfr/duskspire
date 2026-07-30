@@ -8079,6 +8079,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'apiError.p2e.below_minimum': '금액이 최소 한도보다 적습니다.',
   'apiError.p2e.roster_full': '영웅 명단이 가득 찼습니다.',
   'apiError.p2e.try_again': '문제가 발생했습니다. 다시 시도하세요.',
+  'apiError.p2e.starter_claimed': '이미 스타터 영웅을 받았습니다.',
   'apiError.steam.disabled': '현재 Steam 연동을 사용할 수 없습니다.',
   'apiError.wallet.handoff_invalid':
     '지갑 인증이 만료되었거나 확인할 수 없습니다. 다시 시도해 주세요.',

@@ -7,6 +7,7 @@
 // idempotent by ref (a chain signature, a match id) and can never overdraw;
 // both guarantees live in the SQL transaction (p2e_db.ts), not in caller
 // discipline. The REST surface is read-only: balance and ledger history.
+import { offensiveName, validCharName } from './auth';
 import { accountAndScopeForToken, moderationStatusForAccount, walletForAccount } from './db';
 import { HttpError } from './http/errors';
 import {
@@ -20,11 +21,15 @@ import type { Ctx, RouteDef } from './http/types';
 import { json } from './http_util';
 import {
   type P2eHeroBoxOutcome,
+  type P2eHeroView,
   type P2eLedgerEntry,
   type P2eMutationOutcome,
+  type P2eStarterOutcome,
   type P2eWithdrawalOutcome,
   p2eApplyMutation,
   p2eBalanceFor,
+  p2eGrantStarter,
+  p2eHeroRoster,
   p2eLedgerPage,
   p2eOpenHeroBox,
   p2eRequestWithdrawal,
@@ -35,6 +40,7 @@ import {
   LEGENDARY_PITY,
   RARITY_ODDS_BP,
   seasonSeedHash,
+  starterRotation,
 } from './p2e_draw_core';
 
 // The db seam: the bearer guard reads plus the ledger reads/mutation. The
@@ -66,6 +72,8 @@ export interface P2eDb extends BearerActiveGuardDb {
     priceBase: bigint,
     rosterLimit: number,
   ): Promise<P2eHeroBoxOutcome>;
+  heroRoster(accountId: number): Promise<P2eHeroView[]>;
+  grantStarter(accountId: number, heroClass: string, name: string): Promise<P2eStarterOutcome>;
 }
 
 const REAL_P2E_DB: P2eDb = {
@@ -77,6 +85,8 @@ const REAL_P2E_DB: P2eDb = {
   requestWithdrawal: p2eRequestWithdrawal,
   linkedWallet: async (accountId) => (await walletForAccount(accountId))?.pubkey ?? null,
   openHeroBox: p2eOpenHeroBox,
+  heroRoster: p2eHeroRoster,
+  grantStarter: p2eGrantStarter,
 };
 let p2eDb: P2eDb = REAL_P2E_DB;
 
@@ -269,6 +279,48 @@ async function openHeroBoxHandler(ctx: Ctx): Promise<void> {
   });
 }
 
+/** GET /api/p2e/heroes: the caller's hero roster (starter + box heroes). */
+async function heroesHandler(ctx: Ctx): Promise<void> {
+  const heroes = await p2eDb.heroRoster(accountIdOf(ctx));
+  const { season } = seasonConfig();
+  json(ctx.res, 200, {
+    heroes,
+    rosterLimit: HERO_ROSTER_LIMIT,
+    starterRotation: starterRotation(season),
+  });
+}
+
+export const p2eStarterBodySchema = object({
+  heroClass: str({ maxLength: 16 }),
+  name: str({ maxLength: 16 }),
+});
+export type P2eStarterBody = Infer<typeof p2eStarterBodySchema>;
+
+/**
+ * POST /api/p2e/starter: claim the one free starter hero (heroes.md section
+ * 4): player-named, class from the season's rotation of 3, common rarity,
+ * never an NFT, never counted against the roster cap. One per account,
+ * enforced in-statement.
+ */
+async function starterHandler(ctx: Ctx): Promise<void> {
+  const decoded = p2eStarterBodySchema.decode(ctx.body);
+  if (!decoded.ok) throw decoded;
+  const { heroClass, name } = decoded.value;
+  const { season } = seasonConfig();
+  if (!starterRotation(season).includes(heroClass as never)) {
+    throw new HttpError(400, 'p2e.invalid_input');
+  }
+  if (!validCharName(name) || offensiveName(name)) {
+    throw new HttpError(400, 'p2e.invalid_input');
+  }
+  const outcome = await p2eDb.grantStarter(accountIdOf(ctx), heroClass, name);
+  if (!outcome.ok) {
+    if (outcome.error === 'starter_claimed') throw new HttpError(409, 'p2e.starter_claimed');
+    throw new HttpError(409, 'character.name_taken');
+  }
+  json(ctx.res, 200, { characterId: outcome.characterId, name, heroClass, rarity: 'common' });
+}
+
 export const routes: RouteDef[] = [
   {
     method: 'GET',
@@ -303,5 +355,19 @@ export const routes: RouteDef[] = [
     surface: 'api',
     middleware: [fullAuthGuard, withBody()],
     handler: openHeroBoxHandler,
+  },
+  {
+    method: 'GET',
+    path: '/api/p2e/heroes',
+    surface: 'api',
+    middleware: [authGuard],
+    handler: heroesHandler,
+  },
+  {
+    method: 'POST',
+    path: '/api/p2e/starter',
+    surface: 'api',
+    middleware: [fullAuthGuard, withBody()],
+    handler: starterHandler,
   },
 ];

@@ -7733,6 +7733,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'apiError.p2e.below_minimum': '金額低於最低限額。',
   'apiError.p2e.roster_full': '你的英雄名冊已滿。',
   'apiError.p2e.try_again': '發生問題，請重試。',
+  'apiError.p2e.starter_claimed': '你已領取過新手英雄。',
   'apiError.steam.disabled': 'Steam 連結目前無法使用。',
   'apiError.wallet.handoff_invalid': '錢包授權已過期或無法驗證。請再試一次。',
   'apiError.steam.invalid_ticket': 'Steam 無法驗證此連結請求。請在桌面應用程式中重試。',

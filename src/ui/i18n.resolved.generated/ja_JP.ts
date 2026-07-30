@@ -2938,7 +2938,8 @@ export const ja_JP: EnTranslations = {
       "wallet_not_linked": "先にウォレットを連携してください。",
       "below_minimum": "金額が最低額を下回っています。",
       "roster_full": "ヒーローの名簿がいっぱいです。",
-      "try_again": "問題が発生しました。もう一度お試しください。"
+      "try_again": "問題が発生しました。もう一度お試しください。",
+      "starter_claimed": "スターターヒーローは受け取り済みです。"
     }
   },
   "guide": {

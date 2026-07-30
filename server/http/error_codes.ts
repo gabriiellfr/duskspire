@@ -199,6 +199,7 @@ export const ERROR_CODES = deepFreeze({
   'p2e.below_minimum': { params: [] },
   'p2e.roster_full': { params: [] },
   'p2e.try_again': { params: [] },
+  'p2e.starter_claimed': { params: [] },
 } as const);
 
 /** A stable error code: one of the keys of ERROR_CODES. */

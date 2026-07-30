@@ -8224,6 +8224,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'apiError.p2e.below_minimum': 'Сумма меньше минимальной.',
   'apiError.p2e.roster_full': 'Ваш список героев заполнен.',
   'apiError.p2e.try_again': 'Что-то пошло не так. Попробуйте ещё раз.',
+  'apiError.p2e.starter_claimed': 'Вы уже получили стартового героя.',
   'apiError.steam.disabled': 'Привязка Steam сейчас недоступна.',
   'apiError.wallet.handoff_invalid':
     'Срок действия авторизации кошелька истек или ее не удалось проверить. Повторите попытку.',

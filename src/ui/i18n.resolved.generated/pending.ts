@@ -14,6 +14,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -22,6 +23,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -30,6 +32,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -38,6 +41,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -47,6 +51,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -55,6 +60,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -67,6 +73,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -76,6 +83,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -84,6 +92,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -92,6 +101,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -100,6 +110,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -108,6 +119,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -116,6 +128,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -124,6 +137,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ],
@@ -132,6 +146,7 @@ export const pending: Record<string, readonly string[]> = {
     "apiError.p2e.insufficient_funds",
     "apiError.p2e.invalid_input",
     "apiError.p2e.roster_full",
+    "apiError.p2e.starter_claimed",
     "apiError.p2e.try_again",
     "apiError.p2e.wallet_not_linked"
   ]

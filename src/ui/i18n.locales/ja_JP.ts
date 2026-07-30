@@ -8096,6 +8096,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'apiError.p2e.below_minimum': '金額が最低額を下回っています。',
   'apiError.p2e.roster_full': 'ヒーローの名簿がいっぱいです。',
   'apiError.p2e.try_again': '問題が発生しました。もう一度お試しください。',
+  'apiError.p2e.starter_claimed': 'スターターヒーローは受け取り済みです。',
   'apiError.steam.disabled': 'Steam連携は現在利用できません。',
   'apiError.wallet.handoff_invalid':
     'ウォレット認証の有効期限が切れたか、確認できませんでした。もう一度お試しください。',

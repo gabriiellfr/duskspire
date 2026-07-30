@@ -8,15 +8,19 @@ import {
   debitP2e,
   resetP2eDbForTests,
   routes,
+  seasonConfig,
   setP2eDbForTests,
 } from '../../server/p2e';
 import type {
   P2eHeroBoxOutcome,
+  P2eHeroView,
   P2eLedgerEntry,
   P2eMutationOutcome,
+  P2eStarterOutcome,
   P2eWithdrawalOutcome,
 } from '../../server/p2e_db';
-import { drawHero, type PityState } from '../../server/p2e_draw_core';
+import { drawHero, type PityState, starterRotation } from '../../server/p2e_draw_core';
+import { ALL_CLASSES } from '../../src/sim/types';
 import { fakeCtx } from './helpers';
 
 interface FakeResShape {
@@ -64,6 +68,32 @@ class FakeLedger {
   withdrawals: { id: string; accountId: number; amount: bigint; destination: string }[] = [];
   wallets = new Map<number, string>();
   heroes: { characterId: number; rarity: string; heroClass: string }[] = [];
+  roster: P2eHeroView[] = [];
+  starterClaimed = false;
+  takenNames = new Set<string>();
+
+  heroRoster = async (_accountId: number): Promise<P2eHeroView[]> => this.roster;
+
+  grantStarter = async (
+    _accountId: number,
+    heroClass: string,
+    name: string,
+  ): Promise<P2eStarterOutcome> => {
+    if (this.starterClaimed) return { ok: false, error: 'starter_claimed' };
+    if (this.takenNames.has(name)) return { ok: false, error: 'name_taken' };
+    this.starterClaimed = true;
+    this.takenNames.add(name);
+    this.roster.push({
+      characterId: 501,
+      name,
+      heroClass,
+      level: 1,
+      rarity: 'common',
+      isStarter: true,
+      mintAddress: null,
+    });
+    return { ok: true, characterId: 501 };
+  };
   pity: PityState = { sinceEpic: 0, sinceLegendary: 0 };
   drawCount = 0;
   rosterFull = false;
@@ -156,6 +186,8 @@ function installFake(ledger: FakeLedger): void {
     requestWithdrawal: ledger.requestWithdrawal,
     linkedWallet: ledger.linkedWallet,
     openHeroBox: ledger.openHeroBox,
+    heroRoster: ledger.heroRoster,
+    grantStarter: ledger.grantStarter,
   });
 }
 
@@ -470,5 +502,107 @@ describe('POST /api/p2e/boxes/hero/open', () => {
     const second = openCtx();
     await handler()(second);
     expect((captured(second.res).body as { drawIndex: number }).drawIndex).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Roster + starter (handler arms; ctx.account preset).
+// ---------------------------------------------------------------------------
+
+describe('GET /api/p2e/heroes', () => {
+  it('serves the roster with the cap and the starter rotation', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    await ledger.grantStarter(1, 'warrior', 'Brandane');
+    const route = routes.find((r) => r.path === '/api/p2e/heroes');
+    if (!route) throw new Error('heroes route missing');
+    const ctx = fakeCtx({
+      method: 'GET',
+      url: '/api/p2e/heroes',
+      account: { accountId: 1, scope: 'read' },
+      query: {},
+    });
+    await route.handler(ctx);
+    const { status, body } = captured(ctx.res);
+    expect(status).toBe(200);
+    const view = body as {
+      heroes: P2eHeroView[];
+      rosterLimit: number;
+      starterRotation: string[];
+    };
+    expect(view.rosterLimit).toBe(20);
+    expect(view.starterRotation.length).toBe(3);
+    expect(view.heroes).toEqual([
+      {
+        characterId: 501,
+        name: 'Brandane',
+        heroClass: 'warrior',
+        level: 1,
+        rarity: 'common',
+        isStarter: true,
+        mintAddress: null,
+      },
+    ]);
+  });
+});
+
+describe('POST /api/p2e/starter', () => {
+  const handler = () => {
+    const route = routes.find((r) => r.path === '/api/p2e/starter');
+    if (!route) throw new Error('starter route missing');
+    return route.handler;
+  };
+  const starterCtx = (body: unknown) =>
+    fakeCtx({
+      method: 'POST',
+      url: '/api/p2e/starter',
+      account: { accountId: 1, scope: 'full' },
+      body,
+    });
+  const rotation = () => starterRotation(seasonConfig().season);
+
+  it('grants the one free starter hero from the rotation', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    const ctx = starterCtx({ heroClass: rotation()[0], name: 'Brandane' });
+    await handler()(ctx);
+    expect(captured(ctx.res)).toEqual({
+      status: 200,
+      body: {
+        characterId: 501,
+        name: 'Brandane',
+        heroClass: rotation()[0],
+        rarity: 'common',
+      },
+    });
+  });
+
+  it('409s a second claim with starter_claimed', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    await handler()(starterCtx({ heroClass: rotation()[0], name: 'Brandane' }));
+    await expect(
+      handler()(starterCtx({ heroClass: rotation()[0], name: 'Wrenkara' })),
+    ).rejects.toMatchObject({ status: 409, code: 'p2e.starter_claimed' });
+  });
+
+  it('rejects a class outside the rotation and an invalid name', async () => {
+    installFake(new FakeLedger());
+    const offRotation = ALL_CLASSES.find((c) => !rotation().includes(c));
+    await expect(
+      handler()(starterCtx({ heroClass: offRotation, name: 'Brandane' })),
+    ).rejects.toMatchObject({ code: 'p2e.invalid_input' });
+    await expect(
+      handler()(starterCtx({ heroClass: rotation()[0], name: 'x1!' })),
+    ).rejects.toMatchObject({ code: 'p2e.invalid_input' });
+  });
+
+  it('409s a taken name with the shared character.name_taken code', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    ledger.takenNames.add('Brandane');
+    await expect(
+      handler()(starterCtx({ heroClass: rotation()[0], name: 'Brandane' })),
+    ).rejects.toMatchObject({ status: 409, code: 'character.name_taken' });
   });
 });

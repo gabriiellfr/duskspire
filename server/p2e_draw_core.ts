@@ -194,3 +194,20 @@ export function deriveHeroName(
     ];
   return `${head}${tail}`;
 }
+
+// ---------------------------------------------------------------------------
+// Starter rotation (docs/p2e/heroes.md section 4): the free starter hero
+// offers a pick of 3 archetypes, rotated deterministically per season so the
+// class distribution stays healthy without any stored state.
+// ---------------------------------------------------------------------------
+
+export function starterRotation(season: string): PlayerClass[] {
+  const digest = createHash('sha256').update(`starter:${season}`, 'utf8').digest();
+  const pool = [...ALL_CLASSES];
+  const picks: PlayerClass[] = [];
+  for (let i = 0; i < 3; i++) {
+    const index = digest.readUInt16BE(i * 2) % pool.length;
+    picks.push(pool.splice(index, 1)[0]);
+  }
+  return picks;
+}

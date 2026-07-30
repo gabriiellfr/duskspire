@@ -108,6 +108,7 @@ const KNOWN_CODES = [
   'p2e.below_minimum',
   'p2e.roster_full',
   'p2e.try_again',
+  'p2e.starter_claimed',
 ];
 
 // The parametric contract pins: the matcher
