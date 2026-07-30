@@ -148,6 +148,8 @@ export const API_CONTENT_TYPE: Readonly<Record<string, ContentTypeClass>> = {
   '/api/p2e/balance': PROBLEM_JSON,
   '/api/p2e/ledger': PROBLEM_JSON,
   '/api/p2e/withdraw': PROBLEM_JSON,
+  '/api/p2e/season': PROBLEM_JSON,
+  '/api/p2e/boxes/hero/open': PROBLEM_JSON,
   '/api/card': BINARY,
   '/api/referrals': PROBLEM_JSON,
   '/api/discord/swag/claim': PROBLEM_JSON,

@@ -8094,6 +8094,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'apiError.p2e.insufficient_funds': 'トークンが不足しています。',
   'apiError.p2e.wallet_not_linked': '先にウォレットを連携してください。',
   'apiError.p2e.below_minimum': '金額が最低額を下回っています。',
+  'apiError.p2e.roster_full': 'ヒーローの名簿がいっぱいです。',
+  'apiError.p2e.try_again': '問題が発生しました。もう一度お試しください。',
   'apiError.steam.disabled': 'Steam連携は現在利用できません。',
   'apiError.wallet.handoff_invalid':
     'ウォレット認証の有効期限が切れたか、確認できませんでした。もう一度お試しください。',

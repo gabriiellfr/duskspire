@@ -2936,7 +2936,9 @@ export const ko_KR: EnTranslations = {
       "invalid_input": "입력이 올바르지 않습니다.",
       "insufficient_funds": "토큰이 부족합니다.",
       "wallet_not_linked": "먼저 지갑을 연결하세요.",
-      "below_minimum": "금액이 최소 한도보다 적습니다."
+      "below_minimum": "금액이 최소 한도보다 적습니다.",
+      "roster_full": "영웅 명단이 가득 찼습니다.",
+      "try_again": "문제가 발생했습니다. 다시 시도하세요."
     }
   },
   "guide": {

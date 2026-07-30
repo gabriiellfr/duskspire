@@ -8222,6 +8222,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'apiError.p2e.insufficient_funds': 'Недостаточно токенов.',
   'apiError.p2e.wallet_not_linked': 'Сначала привяжите кошелёк.',
   'apiError.p2e.below_minimum': 'Сумма меньше минимальной.',
+  'apiError.p2e.roster_full': 'Ваш список героев заполнен.',
+  'apiError.p2e.try_again': 'Что-то пошло не так. Попробуйте ещё раз.',
   'apiError.steam.disabled': 'Привязка Steam сейчас недоступна.',
   'apiError.wallet.handoff_invalid':
     'Срок действия авторизации кошелька истек или ее не удалось проверить. Повторите попытку.',

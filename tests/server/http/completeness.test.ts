@@ -116,6 +116,8 @@ const REGISTRY_ONLY_PATHS = new Set<string>([
   '/api/p2e/balance',
   '/api/p2e/ledger',
   '/api/p2e/withdraw',
+  '/api/p2e/season',
+  '/api/p2e/boxes/hero/open',
 ]);
 
 // Every legacy /api ladder row (dispatcher === main handleApi), minus the
@@ -323,6 +325,8 @@ describe('registry completeness: migrated baseline (public reads + auth + charac
     { method: 'GET', path: '/api/p2e/balance' },
     { method: 'GET', path: '/api/p2e/ledger' },
     { method: 'POST', path: '/api/p2e/withdraw' },
+    { method: 'GET', path: '/api/p2e/season' },
+    { method: 'POST', path: '/api/p2e/boxes/hero/open' },
     // v0.20.0: the paginated daily leaderboard read (the ops-side sibling is
     // asserted with the internal family below).
     { method: 'GET', path: '/api/daily-rewards/leaderboard' },

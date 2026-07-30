@@ -77,6 +77,8 @@ const EXPECTED_CODES = [
   'p2e.insufficient_funds',
   'p2e.wallet_not_linked',
   'p2e.below_minimum',
+  'p2e.roster_full',
+  'p2e.try_again',
 ];
 
 describe('ERROR_CODES catalog', () => {

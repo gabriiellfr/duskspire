@@ -141,6 +141,8 @@ export type TranslationKeyFlat =
   | 'apiError.p2e.below_minimum'
   | 'apiError.p2e.insufficient_funds'
   | 'apiError.p2e.invalid_input'
+  | 'apiError.p2e.roster_full'
+  | 'apiError.p2e.try_again'
   | 'apiError.p2e.wallet_not_linked'
   | 'apiError.rate_limit.exceeded'
   | 'apiError.steam.account_taken'

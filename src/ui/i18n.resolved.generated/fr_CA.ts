@@ -2936,7 +2936,9 @@ export const fr_CA: EnTranslations = {
       "invalid_input": "Invalid input.",
       "insufficient_funds": "Not enough tokens.",
       "wallet_not_linked": "Link a wallet first.",
-      "below_minimum": "Amount is below the minimum."
+      "below_minimum": "Amount is below the minimum.",
+      "roster_full": "Your hero roster is full.",
+      "try_again": "Something went wrong. Try again."
     }
   },
   "guide": {

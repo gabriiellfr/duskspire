@@ -197,6 +197,8 @@ export const ERROR_CODES = deepFreeze({
   'p2e.insufficient_funds': { params: [] },
   'p2e.wallet_not_linked': { params: [] },
   'p2e.below_minimum': { params: [] },
+  'p2e.roster_full': { params: [] },
+  'p2e.try_again': { params: [] },
 } as const);
 
 /** A stable error code: one of the keys of ERROR_CODES. */

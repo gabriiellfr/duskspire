@@ -6,6 +6,8 @@
 // cross this module as bigint/string, never number: a JS double cannot hold
 // the full range.
 import { pool } from './db';
+import { deriveHeroName, drawHero, type HeroDraw, type PityState } from './p2e_draw_core';
+import { REALM } from './realm';
 
 export const P2E_SCHEMA = `
 CREATE TABLE IF NOT EXISTS p2e_balances (
@@ -55,6 +57,44 @@ CREATE TABLE IF NOT EXISTS p2e_withdrawals (
 );
 CREATE INDEX IF NOT EXISTS p2e_withdrawals_status ON p2e_withdrawals(status, id);
 CREATE INDEX IF NOT EXISTS p2e_withdrawals_account ON p2e_withdrawals(account_id, id DESC);
+-- Hero-box gacha (docs/p2e/economy.md section 5). p2e_heroes marks a character
+-- row as a drawn hero and carries its rarity (immutable) and, once minted, its
+-- on-chain identity. p2e_draws is the per-draw audit the commit-reveal seed
+-- verifies against: KEEP FOREVER (players recompute their draws at reveal).
+-- p2e_pity is the per-season deterministic guarantee state; the row lock on it
+-- serializes an account's box opens.
+CREATE TABLE IF NOT EXISTS p2e_heroes (
+  character_id INT PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+  account_id INT REFERENCES accounts(id) ON DELETE SET NULL,
+  rarity TEXT NOT NULL,
+  draw_id BIGINT,
+  mint_address TEXT UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS p2e_heroes_account ON p2e_heroes(account_id);
+CREATE TABLE IF NOT EXISTS p2e_draws (
+  id BIGSERIAL PRIMARY KEY,
+  account_id INT REFERENCES accounts(id) ON DELETE SET NULL,
+  season TEXT NOT NULL,
+  draw_index INT NOT NULL,
+  box TEXT NOT NULL,
+  rarity TEXT NOT NULL,
+  hero_class TEXT NOT NULL,
+  rarity_roll INT NOT NULL,
+  class_roll INT NOT NULL,
+  pity_applied TEXT NOT NULL,
+  character_id INT REFERENCES characters(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT p2e_draws_unique_index UNIQUE (account_id, season, draw_index)
+);
+CREATE TABLE IF NOT EXISTS p2e_pity (
+  account_id INT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  season TEXT NOT NULL,
+  draw_count INT NOT NULL DEFAULT 0,
+  since_epic INT NOT NULL DEFAULT 0,
+  since_legendary INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (account_id, season)
+);
 `;
 
 export interface P2eLedgerEntry {
@@ -155,6 +195,150 @@ export async function p2eRequestWithdrawal(
     return { ok: true, id, balance };
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+export type P2eHeroBoxOutcome =
+  | {
+      ok: true;
+      characterId: number;
+      name: string;
+      draw: HeroDraw;
+      drawIndex: number;
+      balance: bigint;
+    }
+  | { ok: false; error: 'insufficient_funds' | 'roster_full' | 'name_collision' };
+
+// Open one Hero Box: ONE transaction covering the whole grant, keyed by the
+// pity-row lock (FOR UPDATE serializes an account's opens, which also makes
+// the draw_index allocation race-free):
+//   1. lock/read pity -> drawIndex = draw_count + 1
+//   2. debit the box price in-statement (no overdraft) + ledger row with the
+//      deterministic ref herobox:<season>:<account>:<index>
+//   3. roster-cap check, then the character INSERT (the hero IS a character
+//      row; deliberately inline rather than createCharacterCapped, which owns
+//      its own transaction and would break the all-or-nothing grant)
+//   4. p2e_heroes + p2e_draws rows, pity update
+// Any failure rolls the whole box open back: the player keeps their SPIRE and
+// no partial hero exists. The name candidates are deterministic per attempt;
+// ten straight UNIQUE collisions abort as name_collision (retryable).
+export async function p2eOpenHeroBox(
+  accountId: number,
+  season: string,
+  seasonSeed: string,
+  priceBase: bigint,
+  rosterLimit: number,
+): Promise<P2eHeroBoxOutcome> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      'INSERT INTO p2e_pity (account_id, season) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [accountId, season],
+    );
+    const pityRow = await client.query(
+      `SELECT draw_count, since_epic, since_legendary FROM p2e_pity
+         WHERE account_id = $1 AND season = $2 FOR UPDATE`,
+      [accountId, season],
+    );
+    const drawIndex = Number(pityRow.rows[0].draw_count) + 1;
+    const pity: PityState = {
+      sinceEpic: Number(pityRow.rows[0].since_epic),
+      sinceLegendary: Number(pityRow.rows[0].since_legendary),
+    };
+
+    await client.query(
+      'INSERT INTO p2e_balances (account_id, balance) VALUES ($1, 0) ON CONFLICT (account_id) DO NOTHING',
+      [accountId],
+    );
+    const debited = await client.query(
+      `UPDATE p2e_balances SET balance = balance - $2, updated_at = now()
+         WHERE account_id = $1 AND balance - $2 >= 0 RETURNING balance`,
+      [accountId, priceBase.toString()],
+    );
+    if (debited.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return { ok: false, error: 'insufficient_funds' };
+    }
+    const balance = BigInt(debited.rows[0].balance);
+    await client.query(
+      `INSERT INTO p2e_ledger (account_id, delta, balance_after, reason, ref)
+         VALUES ($1, $2, $3, 'hero_box', $4)`,
+      [
+        accountId,
+        (-priceBase).toString(),
+        balance.toString(),
+        `herobox:${season}:${accountId}:${drawIndex}`,
+      ],
+    );
+
+    const rosterCount = await client.query(
+      `SELECT count(*)::int AS n FROM characters c
+         JOIN p2e_heroes h ON h.character_id = c.id
+         WHERE c.account_id = $1 AND c.realm = $2`,
+      [accountId, REALM],
+    );
+    if (Number(rosterCount.rows[0]?.n ?? 0) >= rosterLimit) {
+      await client.query('ROLLBACK');
+      return { ok: false, error: 'roster_full' };
+    }
+
+    const draw = drawHero(seasonSeed, accountId, drawIndex, pity);
+
+    let name: string | null = null;
+    for (let attempt = 0; attempt < 10 && name === null; attempt++) {
+      const candidate = deriveHeroName(seasonSeed, accountId, drawIndex, attempt);
+      const taken = await client.query('SELECT 1 FROM characters WHERE name = $1', [candidate]);
+      if (taken.rows.length === 0) name = candidate;
+    }
+    if (name === null) {
+      await client.query('ROLLBACK');
+      return { ok: false, error: 'name_collision' };
+    }
+
+    const character = await client.query(
+      `INSERT INTO characters (account_id, name, class, realm, state)
+         VALUES ($1, $2, $3, $4, NULL) RETURNING id`,
+      [accountId, name, draw.heroClass, REALM],
+    );
+    const characterId = Number(character.rows[0].id);
+    const drawRow = await client.query(
+      `INSERT INTO p2e_draws
+         (account_id, season, draw_index, box, rarity, hero_class, rarity_roll, class_roll, pity_applied, character_id)
+         VALUES ($1, $2, $3, 'hero', $4, $5, $6, $7, $8, $9) RETURNING id`,
+      [
+        accountId,
+        season,
+        drawIndex,
+        draw.rarity,
+        draw.heroClass,
+        draw.rarityRoll,
+        draw.classRoll,
+        draw.pityApplied,
+        characterId,
+      ],
+    );
+    await client.query(
+      `INSERT INTO p2e_heroes (character_id, account_id, rarity, draw_id)
+         VALUES ($1, $2, $3, $4)`,
+      [characterId, accountId, draw.rarity, drawRow.rows[0].id],
+    );
+    await client.query(
+      `UPDATE p2e_pity SET draw_count = $3, since_epic = $4, since_legendary = $5
+         WHERE account_id = $1 AND season = $2`,
+      [accountId, season, drawIndex, draw.nextPity.sinceEpic, draw.nextPity.sinceLegendary],
+    );
+    await client.query('COMMIT');
+    return { ok: true, characterId, name, draw, drawIndex, balance };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    // A concurrent global name claim raced the pre-check: retryable.
+    if ((err as { code?: string }).code === '23505') {
+      return { ok: false, error: 'name_collision' };
+    }
     throw err;
   } finally {
     client.release();

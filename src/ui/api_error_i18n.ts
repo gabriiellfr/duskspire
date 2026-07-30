@@ -122,6 +122,8 @@ export const API_ERROR_KEYS = {
   'p2e.insufficient_funds': 'apiError.p2e.insufficient_funds',
   'p2e.wallet_not_linked': 'apiError.p2e.wallet_not_linked',
   'p2e.below_minimum': 'apiError.p2e.below_minimum',
+  'p2e.roster_full': 'apiError.p2e.roster_full',
+  'p2e.try_again': 'apiError.p2e.try_again',
 } satisfies Record<string, TranslationKey>;
 
 /** The message of an Error, or the string form of any other thrown value. */

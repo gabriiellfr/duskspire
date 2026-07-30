@@ -191,5 +191,7 @@ export const apiErrorStrings = {
     insufficient_funds: 'Not enough tokens.',
     wallet_not_linked: 'Link a wallet first.',
     below_minimum: 'Amount is below the minimum.',
+    roster_full: 'Your hero roster is full.',
+    try_again: 'Something went wrong. Try again.',
   },
 };

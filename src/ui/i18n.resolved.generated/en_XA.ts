@@ -2936,7 +2936,9 @@ export const en_XA: EnTranslations = {
       "invalid_input": "[Íñʋáļíð íñþúţ.]",
       "insufficient_funds": "[Ñóţ éñóúĝĥ ţóķéñš.]",
       "wallet_not_linked": "[Ļíñķ á ŵáļļéţ ƒíŕšţ.]",
-      "below_minimum": "[Áɱóúñţ íš ƀéļóŵ ţĥé ɱíñíɱúɱ.]"
+      "below_minimum": "[Áɱóúñţ íš ƀéļóŵ ţĥé ɱíñíɱúɱ.]",
+      "roster_full": "[Ýóúŕ ĥéŕó ŕóšţéŕ íš ƒúļļ.]",
+      "try_again": "[Šóɱéţĥíñĝ ŵéñţ ŵŕóñĝ. Ţŕý áĝáíñ.]"
     }
   },
   "guide": {

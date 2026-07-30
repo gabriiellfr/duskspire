@@ -10,7 +10,13 @@ import {
   routes,
   setP2eDbForTests,
 } from '../../server/p2e';
-import type { P2eLedgerEntry, P2eMutationOutcome, P2eWithdrawalOutcome } from '../../server/p2e_db';
+import type {
+  P2eHeroBoxOutcome,
+  P2eLedgerEntry,
+  P2eMutationOutcome,
+  P2eWithdrawalOutcome,
+} from '../../server/p2e_db';
+import { drawHero, type PityState } from '../../server/p2e_draw_core';
 import { fakeCtx } from './helpers';
 
 interface FakeResShape {
@@ -57,6 +63,36 @@ class FakeLedger {
   refs = new Set<string>();
   withdrawals: { id: string; accountId: number; amount: bigint; destination: string }[] = [];
   wallets = new Map<number, string>();
+  heroes: { characterId: number; rarity: string; heroClass: string }[] = [];
+  pity: PityState = { sinceEpic: 0, sinceLegendary: 0 };
+  drawCount = 0;
+  rosterFull = false;
+
+  openHeroBox = async (
+    accountId: number,
+    _season: string,
+    seasonSeed: string,
+    priceBase: bigint,
+    _rosterLimit: number,
+  ): Promise<P2eHeroBoxOutcome> => {
+    const balance = this.balances.get(accountId) ?? 0n;
+    if (balance - priceBase < 0n) return { ok: false, error: 'insufficient_funds' };
+    if (this.rosterFull) return { ok: false, error: 'roster_full' };
+    this.balances.set(accountId, balance - priceBase);
+    const drawIndex = ++this.drawCount;
+    const draw = drawHero(seasonSeed, accountId, drawIndex, this.pity);
+    this.pity = draw.nextPity;
+    const characterId = 1000 + drawIndex;
+    this.heroes.push({ characterId, rarity: draw.rarity, heroClass: draw.heroClass });
+    return {
+      ok: true,
+      characterId,
+      name: `Hero${drawIndex}`,
+      draw,
+      drawIndex,
+      balance: balance - priceBase,
+    };
+  };
 
   linkedWallet = async (accountId: number): Promise<string | null> =>
     this.wallets.get(accountId) ?? null;
@@ -119,6 +155,7 @@ function installFake(ledger: FakeLedger): void {
     applyMutation: ledger.applyMutation,
     requestWithdrawal: ledger.requestWithdrawal,
     linkedWallet: ledger.linkedWallet,
+    openHeroBox: ledger.openHeroBox,
   });
 }
 
@@ -346,5 +383,92 @@ describe('POST /api/p2e/withdraw', () => {
     await expect(handler()(withdrawCtx({ amount }))).rejects.toMatchObject({
       code: 'p2e.invalid_input',
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Hero boxes (handler arms; ctx.account preset like the withdraw block).
+// ---------------------------------------------------------------------------
+
+describe('GET /api/p2e/season', () => {
+  it('publishes the seed commitment, odds, pity thresholds, and price', async () => {
+    installFake(new FakeLedger());
+    const route = routes.find((r) => r.path === '/api/p2e/season');
+    if (!route) throw new Error('season route missing');
+    const ctx = fakeCtx({ method: 'GET', url: '/api/p2e/season', query: {} });
+    await route.handler(ctx);
+    const { status, body } = captured(ctx.res);
+    expect(status).toBe(200);
+    const view = body as {
+      season: string;
+      seedHash: string;
+      oddsBp: Record<string, number>;
+      epicPity: number;
+      legendaryPity: number;
+      heroBoxPrice: string;
+    };
+    expect(view.seedHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(view.oddsBp).toEqual({ common: 7400, rare: 2000, epic: 500, legendary: 100 });
+    expect(view.epicPity).toBe(20);
+    expect(view.legendaryPity).toBe(90);
+    expect(view.heroBoxPrice).toBe('25000000000');
+  });
+});
+
+describe('POST /api/p2e/boxes/hero/open', () => {
+  const handler = () => {
+    const route = routes.find((r) => r.path === '/api/p2e/boxes/hero/open');
+    if (!route) throw new Error('open route missing');
+    return route.handler;
+  };
+  const ACCOUNT = { accountId: 1, scope: 'full' as const };
+  const openCtx = () =>
+    fakeCtx({ method: 'POST', url: '/api/p2e/boxes/hero/open', account: ACCOUNT, body: {} });
+
+  it('debits the price and grants a drawn hero', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    await creditP2e(1, 30_000_000_000n, 'deposit', 'sig1');
+    const ctx = openCtx();
+    await handler()(ctx);
+    const { status, body } = captured(ctx.res);
+    expect(status).toBe(200);
+    const view = body as Record<string, unknown>;
+    expect(view.balance).toBe('5000000000');
+    expect(view.drawIndex).toBe(1);
+    expect(['common', 'rare', 'epic', 'legendary']).toContain(view.rarity);
+    expect(typeof view.name).toBe('string');
+    expect(typeof view.characterId).toBe('number');
+    expect(ledger.heroes.length).toBe(1);
+  });
+
+  it('409s with insufficient_funds when the balance cannot cover the box', async () => {
+    installFake(new FakeLedger());
+    await expect(handler()(openCtx())).rejects.toMatchObject({
+      status: 409,
+      code: 'p2e.insufficient_funds',
+    });
+  });
+
+  it('409s with roster_full at the hero cap', async () => {
+    const ledger = new FakeLedger();
+    ledger.rosterFull = true;
+    installFake(ledger);
+    await creditP2e(1, 30_000_000_000n, 'deposit', 'sig1');
+    await expect(handler()(openCtx())).rejects.toMatchObject({
+      status: 409,
+      code: 'p2e.roster_full',
+    });
+  });
+
+  it('advances the pity state across opens', async () => {
+    const ledger = new FakeLedger();
+    installFake(ledger);
+    await creditP2e(1, 100_000_000_000n, 'deposit', 'sig1');
+    const first = openCtx();
+    await handler()(first);
+    const second = openCtx();
+    await handler()(second);
+    expect((captured(second.res).body as { drawIndex: number }).drawIndex).toBe(2);
   });
 });

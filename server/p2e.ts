@@ -19,14 +19,23 @@ import { type Infer, num, object, optional, str } from './http/schema';
 import type { Ctx, RouteDef } from './http/types';
 import { json } from './http_util';
 import {
+  type P2eHeroBoxOutcome,
   type P2eLedgerEntry,
   type P2eMutationOutcome,
   type P2eWithdrawalOutcome,
   p2eApplyMutation,
   p2eBalanceFor,
   p2eLedgerPage,
+  p2eOpenHeroBox,
   p2eRequestWithdrawal,
 } from './p2e_db';
+import {
+  EPIC_PITY,
+  HERO_BOX_PRICE_BASE,
+  LEGENDARY_PITY,
+  RARITY_ODDS_BP,
+  seasonSeedHash,
+} from './p2e_draw_core';
 
 // The db seam: the bearer guard reads plus the ledger reads/mutation. The
 // production default is the real p2e_db.ts SQL; tests swap in a fake.
@@ -50,6 +59,13 @@ export interface P2eDb extends BearerActiveGuardDb {
   ): Promise<P2eWithdrawalOutcome>;
   /** The account's linked wallet pubkey, or null when none is linked. */
   linkedWallet(accountId: number): Promise<string | null>;
+  openHeroBox(
+    accountId: number,
+    season: string,
+    seasonSeed: string,
+    priceBase: bigint,
+    rosterLimit: number,
+  ): Promise<P2eHeroBoxOutcome>;
 }
 
 const REAL_P2E_DB: P2eDb = {
@@ -60,6 +76,7 @@ const REAL_P2E_DB: P2eDb = {
   applyMutation: p2eApplyMutation,
   requestWithdrawal: p2eRequestWithdrawal,
   linkedWallet: async (accountId) => (await walletForAccount(accountId))?.pubkey ?? null,
+  openHeroBox: p2eOpenHeroBox,
 };
 let p2eDb: P2eDb = REAL_P2E_DB;
 
@@ -187,6 +204,71 @@ async function withdrawHandler(ctx: Ctx): Promise<void> {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Hero boxes (docs/p2e/economy.md section 5).
+// ---------------------------------------------------------------------------
+
+/** The season identity and seed for the commit-reveal draws. */
+export function seasonConfig(): { season: string; seed: string } {
+  return {
+    season: (process.env.P2E_SEASON ?? 'dev0').trim(),
+    // The dev fallback is deliberately labeled unsafe: production sets a
+    // strong secret and reveals it at season end.
+    seed: (process.env.P2E_SEASON_SEED ?? 'dev-season-seed-unsafe').trim(),
+  };
+}
+
+export const HERO_ROSTER_LIMIT = 20; // docs/p2e/heroes.md section 3
+
+/**
+ * GET /api/p2e/season: the public transparency read: season id, the seed
+ * commitment (sha256), the published odds, pity thresholds, and the box
+ * price. This is the loot-box odds disclosure surface.
+ */
+function seasonHandler(ctx: Ctx): void {
+  const { season, seed } = seasonConfig();
+  json(ctx.res, 200, {
+    season,
+    seedHash: seasonSeedHash(seed),
+    oddsBp: RARITY_ODDS_BP,
+    epicPity: EPIC_PITY,
+    legendaryPity: LEGENDARY_PITY,
+    heroBoxPrice: HERO_BOX_PRICE_BASE.toString(),
+  });
+}
+
+/**
+ * POST /api/p2e/boxes/hero/open: debit the box price and grant a drawn hero
+ * (a new character row carrying its rarity). Full-scope sessions only.
+ */
+async function openHeroBoxHandler(ctx: Ctx): Promise<void> {
+  const { season, seed } = seasonConfig();
+  const outcome = await p2eDb.openHeroBox(
+    accountIdOf(ctx),
+    season,
+    seed,
+    HERO_BOX_PRICE_BASE,
+    HERO_ROSTER_LIMIT,
+  );
+  if (!outcome.ok) {
+    if (outcome.error === 'insufficient_funds') throw new HttpError(409, 'p2e.insufficient_funds');
+    if (outcome.error === 'roster_full') throw new HttpError(409, 'p2e.roster_full');
+    throw new HttpError(409, 'p2e.try_again');
+  }
+  json(ctx.res, 200, {
+    characterId: outcome.characterId,
+    name: outcome.name,
+    rarity: outcome.draw.rarity,
+    heroClass: outcome.draw.heroClass,
+    drawIndex: outcome.drawIndex,
+    pityApplied: outcome.draw.pityApplied,
+    // The verifiable rolls, so a player can recompute at season reveal.
+    rarityRoll: outcome.draw.rarityRoll,
+    classRoll: outcome.draw.classRoll,
+    balance: outcome.balance.toString(),
+  });
+}
+
 export const routes: RouteDef[] = [
   {
     method: 'GET',
@@ -208,5 +290,18 @@ export const routes: RouteDef[] = [
     surface: 'api',
     middleware: [fullAuthGuard, withBody()],
     handler: withdrawHandler,
+  },
+  {
+    method: 'GET',
+    path: '/api/p2e/season',
+    surface: 'api',
+    handler: seasonHandler,
+  },
+  {
+    method: 'POST',
+    path: '/api/p2e/boxes/hero/open',
+    surface: 'api',
+    middleware: [fullAuthGuard, withBody()],
+    handler: openHeroBoxHandler,
   },
 ];
