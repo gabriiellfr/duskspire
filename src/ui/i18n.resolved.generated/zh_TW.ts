@@ -2931,6 +2931,10 @@ export const zh_TW: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "輸入無效。"
+    },
+    "p2e": {
+      "invalid_input": "輸入無效。",
+      "insufficient_funds": "代幣不足。"
     }
   },
   "guide": {

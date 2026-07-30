@@ -22,7 +22,15 @@ upstream tables. Conflicts here are trivial to re-apply.
 
 | File | Registration |
 |---|---|
-| (none yet) | |
+| `server/http/registry.ts` | p2e routes import + spread (scaffolder anchors) |
+| `server/db.ts` | `P2E_SCHEMA` import + `ensureSchema` apply line |
+| `server/http/error_codes.ts` | `p2e.invalid_input`, `p2e.insufficient_funds` (append-only) |
+| `src/ui/api_error_i18n.ts` + `src/ui/i18n.catalog/api_error.ts` | apiError.p2e.* mappings + English |
+| `src/ui/i18n.locales/{zh_CN,zh_TW,ja_JP,ko_KR,ru_RU}.ts` | M16 fills for apiError.p2e.* |
+| `tests/server/http/surface_inventory.ts` | two /api/p2e rows |
+| `tests/server/http/completeness.test.ts` | REGISTRY_ONLY_PATHS + migrated list rows |
+| `tests/server/http/content_type_classification.ts` | /api/p2e rows (problem-json) |
+| `tests/server/http/error_codes.test.ts` + `tests/api_error_code_parity.test.ts` | code snapshots |
 
 ## Upstream merge log
 

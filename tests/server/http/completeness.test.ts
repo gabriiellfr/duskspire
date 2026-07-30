@@ -113,6 +113,8 @@ const REGISTRY_ONLY_PATHS = new Set<string>([
   '/api/steam/link',
   '/api/steam/status',
   '/api/ota/updates',
+  '/api/p2e/balance',
+  '/api/p2e/ledger',
 ]);
 
 // Every legacy /api ladder row (dispatcher === main handleApi), minus the
@@ -315,6 +317,10 @@ describe('registry completeness: migrated baseline (public reads + auth + charac
     // The OTA update check (server/ota_updates.ts): registry-only like the
     // deeds trio, env-gated dark until OTA_MANIFEST_URL is set.
     { method: 'POST', path: '/api/ota/updates' },
+    // The P2E token-ledger reads (server/p2e.ts): registry-only like the
+    // deeds pair (the fork's SPIRE economy book, read-only surface).
+    { method: 'GET', path: '/api/p2e/balance' },
+    { method: 'GET', path: '/api/p2e/ledger' },
     // v0.20.0: the paginated daily leaderboard read (the ops-side sibling is
     // asserted with the internal family below).
     { method: 'GET', path: '/api/daily-rewards/leaderboard' },

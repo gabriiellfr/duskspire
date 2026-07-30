@@ -118,6 +118,8 @@ export const API_ERROR_KEYS = {
   'steam.upstream': 'apiError.steam.upstream',
   'wallet.handoff_invalid': 'apiError.wallet.handoff_invalid',
   'ota_updates.invalid_input': 'apiError.ota_updates.invalid_input',
+  'p2e.invalid_input': 'apiError.p2e.invalid_input',
+  'p2e.insufficient_funds': 'apiError.p2e.insufficient_funds',
 } satisfies Record<string, TranslationKey>;
 
 /** The message of an Error, or the string form of any other thrown value. */

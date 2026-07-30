@@ -8090,6 +8090,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'apiError.body.unsupported_media_type': 'サポートされていないリクエスト形式です。',
   'apiError.deeds.invalid_input': '入力が無効です。',
   'apiError.ota_updates.invalid_input': '入力が無効です。',
+  'apiError.p2e.invalid_input': '入力が無効です。',
+  'apiError.p2e.insufficient_funds': 'トークンが不足しています。',
   'apiError.steam.disabled': 'Steam連携は現在利用できません。',
   'apiError.wallet.handoff_invalid':
     'ウォレット認証の有効期限が切れたか、確認できませんでした。もう一度お試しください。',

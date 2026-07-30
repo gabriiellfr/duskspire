@@ -2931,6 +2931,10 @@ export const id_ID: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Masukan tidak valid."
+    },
+    "p2e": {
+      "invalid_input": "Invalid input.",
+      "insufficient_funds": "Not enough tokens."
     }
   },
   "guide": {

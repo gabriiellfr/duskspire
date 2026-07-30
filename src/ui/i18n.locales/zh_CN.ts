@@ -7726,6 +7726,8 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'apiError.body.unsupported_media_type': '不支持的请求格式。',
   'apiError.deeds.invalid_input': '输入无效。',
   'apiError.ota_updates.invalid_input': '输入无效。',
+  'apiError.p2e.invalid_input': '输入无效。',
+  'apiError.p2e.insufficient_funds': '代币不足。',
   'apiError.steam.disabled': 'Steam 关联当前不可用。',
   'apiError.wallet.handoff_invalid': '钱包授权已过期或无法验证。请重试。',
   'apiError.steam.invalid_ticket': 'Steam 无法验证此关联请求。请在桌面客户端中重试。',

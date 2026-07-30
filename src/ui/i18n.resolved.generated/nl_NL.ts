@@ -2931,6 +2931,10 @@ export const nl_NL: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Ongeldige invoer."
+    },
+    "p2e": {
+      "invalid_input": "Invalid input.",
+      "insufficient_funds": "Not enough tokens."
     }
   },
   "guide": {

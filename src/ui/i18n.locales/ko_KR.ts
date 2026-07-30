@@ -8073,6 +8073,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'apiError.body.unsupported_media_type': '지원되지 않는 요청 형식입니다.',
   'apiError.deeds.invalid_input': '입력이 올바르지 않습니다.',
   'apiError.ota_updates.invalid_input': '입력이 올바르지 않습니다.',
+  'apiError.p2e.invalid_input': '입력이 올바르지 않습니다.',
+  'apiError.p2e.insufficient_funds': '토큰이 부족합니다.',
   'apiError.steam.disabled': '현재 Steam 연동을 사용할 수 없습니다.',
   'apiError.wallet.handoff_invalid':
     '지갑 인증이 만료되었거나 확인할 수 없습니다. 다시 시도해 주세요.',

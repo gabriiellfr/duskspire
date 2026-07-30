@@ -2931,6 +2931,10 @@ export const ko_KR: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "입력이 올바르지 않습니다."
+    },
+    "p2e": {
+      "invalid_input": "입력이 올바르지 않습니다.",
+      "insufficient_funds": "토큰이 부족합니다."
     }
   },
   "guide": {

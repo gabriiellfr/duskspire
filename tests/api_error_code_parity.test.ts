@@ -102,6 +102,8 @@ const KNOWN_CODES = [
   'steam.upstream',
   'wallet.handoff_invalid',
   'ota_updates.invalid_input',
+  'p2e.invalid_input',
+  'p2e.insufficient_funds',
 ];
 
 // The parametric contract pins: the matcher

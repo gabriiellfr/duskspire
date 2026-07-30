@@ -1165,6 +1165,29 @@ export const SURFACE_INVENTORY: readonly SurfaceRoute[] = [
     limiter: null,
     requireOwnedExpected: null,
   },
+  // P2E token ledger (server/p2e.ts): registry-only RouteDefs, read-only
+  // surfaces over the fork's SPIRE server book. Both accept read-scope
+  // bearers (createReadGuard); mutations have no REST surface yet.
+  {
+    dispatcher: DISPATCH.mainApi,
+    method: 'GET',
+    path: '/api/p2e/balance',
+    handler: 'server/p2e.ts balanceHandler (registry-only RouteDef)',
+    contentType: PROBLEM_JSON,
+    authScope: AUTH_SCOPE.bearer,
+    limiter: null,
+    requireOwnedExpected: null,
+  },
+  {
+    dispatcher: DISPATCH.mainApi,
+    method: 'GET',
+    path: '/api/p2e/ledger',
+    handler: 'server/p2e.ts ledgerHandler (registry-only RouteDef)',
+    contentType: PROBLEM_JSON,
+    authScope: AUTH_SCOPE.bearer,
+    limiter: null,
+    requireOwnedExpected: null,
+  },
   {
     dispatcher: DISPATCH.mainApi,
     method: 'POST',

@@ -2931,6 +2931,10 @@ export const en_XA: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "[Íñʋáļíð íñþúţ.]"
+    },
+    "p2e": {
+      "invalid_input": "[Íñʋáļíð íñþúţ.]",
+      "insufficient_funds": "[Ñóţ éñóúĝĥ ţóķéñš.]"
     }
   },
   "guide": {

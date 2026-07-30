@@ -73,6 +73,8 @@ const EXPECTED_CODES = [
   'steam.account_taken',
   'steam.upstream',
   'ota_updates.invalid_input',
+  'p2e.invalid_input',
+  'p2e.insufficient_funds',
 ];
 
 describe('ERROR_CODES catalog', () => {

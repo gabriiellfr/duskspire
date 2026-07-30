@@ -2931,6 +2931,10 @@ export const tr_TR: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Geçersiz girdi."
+    },
+    "p2e": {
+      "invalid_input": "Invalid input.",
+      "insufficient_funds": "Not enough tokens."
     }
   },
   "guide": {

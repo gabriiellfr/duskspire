@@ -138,6 +138,8 @@ export type TranslationKeyFlat =
   | 'apiError.moderation.suspended_until'
   | 'apiError.origin.cross_site'
   | 'apiError.ota_updates.invalid_input'
+  | 'apiError.p2e.insufficient_funds'
+  | 'apiError.p2e.invalid_input'
   | 'apiError.rate_limit.exceeded'
   | 'apiError.steam.account_taken'
   | 'apiError.steam.already_linked'

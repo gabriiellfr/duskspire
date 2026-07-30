@@ -2931,6 +2931,10 @@ export const ja_JP: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "入力が無効です。"
+    },
+    "p2e": {
+      "invalid_input": "入力が無効です。",
+      "insufficient_funds": "トークンが不足しています。"
     }
   },
   "guide": {

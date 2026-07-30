@@ -2931,6 +2931,10 @@ export const ru_RU: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Недопустимые данные."
+    },
+    "p2e": {
+      "invalid_input": "Недопустимые данные.",
+      "insufficient_funds": "Недостаточно токенов."
     }
   },
   "guide": {

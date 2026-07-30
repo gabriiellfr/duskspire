@@ -2931,6 +2931,10 @@ export const pt_BR: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Entrada inválida."
+    },
+    "p2e": {
+      "invalid_input": "Invalid input.",
+      "insufficient_funds": "Not enough tokens."
     }
   },
   "guide": {

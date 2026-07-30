@@ -193,6 +193,8 @@ export const ERROR_CODES = deepFreeze({
   // wallet: the desktop browser handoff was malformed, expired, or mismatched.
   'wallet.handoff_invalid': { params: [] },
   'ota_updates.invalid_input': { params: [] },
+  'p2e.invalid_input': { params: [] },
+  'p2e.insufficient_funds': { params: [] },
 } as const);
 
 /** A stable error code: one of the keys of ERROR_CODES. */

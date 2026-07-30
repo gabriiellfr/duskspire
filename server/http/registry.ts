@@ -41,6 +41,7 @@ import { routes as reportsRoutes } from '../reports';
 import { routes as steamRoutes } from '../steam';
 import { routes as userAssetsRoutes } from '../user_assets_routes';
 import { routes as walletRoutes } from '../wallet';
+import { routes as p2eRoutes } from '../p2e';
 // new:endpoint imports appear above this line (npm run new:endpoint)
 import { type CompiledPattern, compilePattern } from './path_pattern';
 import { createRouter, type MatchResult } from './router';
@@ -134,6 +135,7 @@ export const apiRoutes: readonly RouteDef[] = [
   ...deedsRoutes,
   ...steamRoutes,
   ...otaUpdatesRoutes,
+  ...p2eRoutes,
   // new:endpoint spreads appear above this line (npm run new:endpoint)
 ];
 

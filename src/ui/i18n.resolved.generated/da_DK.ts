@@ -2931,6 +2931,10 @@ export const da_DK: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Ugyldig indtastning."
+    },
+    "p2e": {
+      "invalid_input": "Invalid input.",
+      "insufficient_funds": "Not enough tokens."
     }
   },
   "guide": {

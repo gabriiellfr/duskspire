@@ -9,25 +9,70 @@
 // Reproducibility is checked by tests/i18n_resolved_equivalence.test.ts.
 
 export const pending: Record<string, readonly string[]> = {
-  "es": [],
-  "es_ES": [],
-  "fr_FR": [],
-  "fr_CA": [],
+  "es": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "es_ES": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "fr_FR": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "fr_CA": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
   "en_CA": [],
-  "it_IT": [],
-  "de_DE": [],
+  "it_IT": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "de_DE": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
   "zh_CN": [],
   "zh_TW": [],
   "ko_KR": [],
   "ja_JP": [],
-  "pt_BR": [],
+  "pt_BR": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
   "ru_RU": [],
-  "cs_CZ": [],
-  "nl_NL": [],
-  "pl_PL": [],
-  "id_ID": [],
-  "tr_TR": [],
-  "sv_SE": [],
-  "vi_VN": [],
-  "da_DK": []
+  "cs_CZ": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "nl_NL": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "pl_PL": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "id_ID": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "tr_TR": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "sv_SE": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "vi_VN": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ],
+  "da_DK": [
+    "apiError.p2e.insufficient_funds",
+    "apiError.p2e.invalid_input"
+  ]
 };

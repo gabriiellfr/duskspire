@@ -186,4 +186,8 @@ export const apiErrorStrings = {
   ota_updates: {
     invalid_input: 'Invalid input.',
   },
+  p2e: {
+    invalid_input: 'Invalid input.',
+    insufficient_funds: 'Not enough tokens.',
+  },
 };

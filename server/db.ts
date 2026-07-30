@@ -37,6 +37,7 @@ import {
   runMarketBackfill,
 } from './market_backfill';
 import { OAUTH_SCHEMA } from './oauth_db';
+import { P2E_SCHEMA } from './p2e_db';
 import { PLAY_SESSION_RETENTION_SCHEMA } from './play_session_retention_db';
 import {
   closeOrphanPlayerSessions,
@@ -1117,6 +1118,10 @@ export async function ensureSchema(): Promise<void> {
     // block, unblock). FK-references accounts(id), so it runs after SCHEMA.
     // Applied unconditionally (idempotent), like the other schema modules.
     await client.query(CONTENT_MODERATION_SCHEMA);
+    // P2E token ledger (the fork's SPIRE economy book): balances + append-only
+    // audit entries. FK-references accounts(id), so it runs after SCHEMA.
+    // Applied unconditionally (idempotent), like the other schema modules.
+    await client.query(P2E_SCHEMA);
     // Seed the chat-filter word lists + config on first boot only (idempotent).
     // Runs under the same advisory lock so concurrent realm boots don't race.
     await seedChatFilterDefaults(client);

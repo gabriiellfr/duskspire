@@ -2931,6 +2931,10 @@ export const vi_VN: EnTranslations = {
     },
     "ota_updates": {
       "invalid_input": "Dữ liệu nhập không hợp lệ."
+    },
+    "p2e": {
+      "invalid_input": "Invalid input.",
+      "insufficient_funds": "Not enough tokens."
     }
   },
   "guide": {
