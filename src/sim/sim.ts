@@ -518,6 +518,7 @@ import * as yumiMod from './social/yumi';
 export { eloDelta } from './social/arena';
 
 import { FINDER_ACTIVITIES, type FinderListingTag } from './content/dungeon_finder';
+import * as idlePilotMod from './idle_pilot';
 import {
   partyFrameAbsorb,
   partyFrameAggroTargets,
@@ -3115,6 +3116,9 @@ export class Sim {
   removePlayer(pid: number): void {
     const meta = this.players.get(pid);
     if (!meta) return;
+    // Fork (Duskspire): a leaving player's idle pilot ends with the session.
+    this.idlePilotPids.delete(pid);
+    this.idlePilotSteer.delete(pid);
     // Offline/headless removals have no GameServer lifecycle hook. End an
     // accepted recovery explicitly so every accepted attempt has one terminal
     // event; the online server calls the same delegate earlier so it can attach
@@ -4987,6 +4991,12 @@ export class Sim {
     // swings, so a homing bolt resolves on a fixed, deterministic phase boundary.
     advancePendingProjectiles(this.ctx);
     lap?.('projectiles');
+    // Fork (Duskspire): drive the idle auto-combat pilots BEFORE the player
+    // loop so their movement intent lands in this tick's updatePlayerMovement.
+    // Draws ZERO rng and no-ops on an empty set, so appending it here cannot
+    // fork the shared draw order (the Vale Cup precedent).
+    idlePilotMod.updateIdlePilots(this);
+    lap?.('idlePilot');
 
     for (const meta of this.players.values()) {
       const p = this.entities.get(meta.entityId);
@@ -8978,6 +8988,19 @@ export class Sim {
   // session-only, never serialized, cleared by stopFiestaPractice and on any
   // tick a bot is not actively fighting.
   fiestaBotSteer = new Map<number, fiestaBotsMod.BotSteer>();
+
+  // Fork (Duskspire): idle auto-combat pilot state (src/sim/idle_pilot.ts).
+  // Same E1 pattern as the fiesta bot fields: session-only, never serialized.
+  idlePilotPids = new Set<number>();
+  idlePilotSteer = new Map<number, fiestaBotsMod.BotSteer>();
+
+  setIdlePilot(on: boolean, pid?: number): void {
+    idlePilotMod.setIdlePilot(this, pid ?? this.primaryId, on);
+  }
+
+  isIdlePilot(pid?: number): boolean {
+    return this.idlePilotPids.has(pid ?? this.primaryId);
+  }
 
   fiestaPracticeActive(): boolean {
     return fiestaBotsMod.fiestaPracticeActive(this);

@@ -33,8 +33,8 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // Maker's Bond unbind service), and the Rift + mounts surface (rift and
 // forge commands, learn_riding, mount selection).
 const EXPECTED_SEND_COUNT = 173; // mount_select left the wire (reins are items)
-const EXPECTED_DISPATCH_COUNT = 184; // mount_select left the wire (reins are items)
-const EXPECTED_DISPATCH_ONLY_COUNT = 11;
+const EXPECTED_DISPATCH_COUNT = 185; // +idle_pilot (Duskspire fork, dispatch-only)
+const EXPECTED_DISPATCH_ONLY_COUNT = 12;
 
 // The chat sub-channel routing switch (server/game.ts `switch
 // (session.rememberedChat.channel)`) is NOT a msg.cmd dispatch; its labels must

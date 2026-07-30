@@ -496,6 +496,9 @@ export const COMMAND_NAMES = [
   // Guild billboard: set (or clear, with '') the officer-editable message
   // pinned atop the social window's Guild tab (SocialService.guildSetMotd).
   'guild_set_motd',
+  // Fork (Duskspire): toggle the idle auto-combat pilot (src/sim/idle_pilot.ts).
+  // Dispatch-only until the roster UI ships a sender.
+  'idle_pilot',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -525,6 +528,8 @@ export const DISPATCH_ONLY_COMMANDS = [
   // abandon.
   'mount_train_answer',
   'mount_train_abort',
+  // Fork (Duskspire): the idle-pilot toggle has no ClientWorld sender yet.
+  'idle_pilot',
 ] as const satisfies readonly CommandName[];
 
 export type DispatchOnlyCommand = (typeof DISPATCH_ONLY_COMMANDS)[number];

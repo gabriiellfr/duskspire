@@ -4284,6 +4284,11 @@ export class GameServer {
       case 'targetNearest':
         sim.targetNearestEnemy(pid);
         break;
+      // Fork (Duskspire): toggle the idle auto-combat pilot. Boolean-validated
+      // like every other field; anything non-boolean is a no-op.
+      case 'idle_pilot':
+        if (typeof msg.on === 'boolean') sim.setIdlePilot(msg.on, pid);
+        break;
       case 'tabFriendly':
         sim.friendlyTabTarget(pid);
         break;
