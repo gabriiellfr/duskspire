@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS p2e_ledger (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS p2e_ledger_ref ON p2e_ledger(ref) WHERE ref IS NOT NULL;
 CREATE INDEX IF NOT EXISTS p2e_ledger_account_created ON p2e_ledger(account_id, id DESC);
+-- Small key/value state for the P2E background workers (the deposit indexer's
+-- last-processed signature cursor). Bounded by its key vocabulary: keep forever.
+CREATE TABLE IF NOT EXISTS p2e_indexer_state (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 export interface P2eLedgerEntry {
@@ -84,6 +91,19 @@ export async function p2eLedgerPage(
   );
   const rows = res.rows as LedgerRow[];
   return { entries: rows.slice(0, limit).map(rowToEntry), hasMore: rows.length > limit };
+}
+
+export async function p2eIndexerCursor(key: string): Promise<string | null> {
+  const res = await pool.query('SELECT value FROM p2e_indexer_state WHERE key = $1', [key]);
+  return res.rows[0]?.value ?? null;
+}
+
+export async function p2eSetIndexerCursor(key: string, value: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO p2e_indexer_state (key, value) VALUES ($1, $2)
+       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+    [key, value],
+  );
 }
 
 // The one balance-mutation path: everything that moves SPIRE on the server book

@@ -251,6 +251,7 @@ import {
 import { createNativeAttestationChallenge } from './native_attestation';
 import { handleOAuth, seedOAuthClients } from './oauth';
 import { pruneExpiredOAuthGrants } from './oauth_db';
+import { startDepositIndexer } from './p2e_deposit_indexer';
 import { handlePerfReport } from './perf_report';
 import {
   pruneAccountIpAssociationsBatch,
@@ -3105,7 +3106,12 @@ export async function startServer(): Promise<http.Server> {
   });
   retentionSweep.start();
 
+  // P2E deposit indexer (fork): env-gated dark by default; credits confirmed
+  // on-chain SPIRE deposits to the server ledger (server/p2e_deposit_indexer.ts).
+  const stopDepositIndexer = startDepositIndexer();
+
   const shutdown = async () => {
+    stopDepositIndexer();
     // Flip readiness to draining FIRST so /readyz answers 503 and a load balancer
     // sheds new traffic before we stop the loop and persist (in-flight requests and
     // /livez keep working through the drain).

@@ -31,6 +31,8 @@ upstream tables. Conflicts here are trivial to re-apply.
 | `tests/server/http/completeness.test.ts` | REGISTRY_ONLY_PATHS + migrated list rows |
 | `tests/server/http/content_type_classification.ts` | /api/p2e rows (problem-json) |
 | `tests/server/http/error_codes.test.ts` + `tests/api_error_code_parity.test.ts` | code snapshots |
+| `server/main.ts` | `startDepositIndexer()` boot start + shutdown stop (2 lines + import) |
+| `.env.example` | `P2E_DEPOSITS_ENABLED` / `P2E_SPIRE_MINT` / `P2E_TREASURY_ATA` / `P2E_DEPOSIT_POLL_MS` keys |
 
 ## Upstream merge log
 
