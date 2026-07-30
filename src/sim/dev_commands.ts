@@ -168,6 +168,15 @@ export function handleDevChat(
     return null;
   }
 
+  // Fork (Duskspire): toggle the idle auto-combat pilot (src/sim/idle_pilot.ts).
+  const pilotMatch = /^\/(?:dev\s+pilot|devpilot)\s+(on|off)\s*$/i.exec(raw);
+  if (pilotMatch) {
+    const on = pilotMatch[1].toLowerCase() === 'on';
+    ctx.setIdlePilot(pid, on);
+    emitDevLog(ctx, pid, `[dev] Idle pilot ${on ? 'on' : 'off'}.`);
+    return null;
+  }
+
   const despawnMatch = /^\/(?:dev\s+despawn|devdespawn)\s+(target|spawned)\s*$/i.exec(raw);
   if (despawnMatch) {
     const mode = despawnMatch[1].toLowerCase() as 'target' | 'spawned';

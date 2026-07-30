@@ -4681,6 +4681,7 @@ export class Sim {
       // notice is the /join /leave chat-log line. Both stay on Sim. (hasPendingSocialInvite
       // already bound above; isRooted/moveSpeedMult/swingIntervalMult are M2 bindings above.)
       setPlayerLevel: sim.setPlayerLevel.bind(sim),
+      setIdlePilot: (pid, on) => idlePilotMod.setIdlePilot(sim, pid, on),
       notice: sim.notice.bind(sim),
       // Dev-only test-dummy spawner backing "/dev bot <name>" in social/chat.ts.
       spawnDevBot: sim.spawnDevBot.bind(sim),

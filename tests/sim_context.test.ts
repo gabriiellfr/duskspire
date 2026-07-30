@@ -209,6 +209,7 @@ const CALLBACK_KEYS = [
   'syncPetAspect',
   // G2 social plumbing (hasPendingSocialInvite already listed above; deduped).
   'setPlayerLevel',
+  'setIdlePilot',
   'notice',
   'spawnDevBot',
   'spawnDevVendor',
@@ -525,6 +526,7 @@ function makeFakeHost() {
     syncPetAspect: vi.fn(),
     // G2 social plumbing (hasPendingSocialInvite already stubbed above; deduped).
     setPlayerLevel: vi.fn(),
+    setIdlePilot: vi.fn(),
     notice: vi.fn(),
     spawnDevBot: vi.fn(),
     spawnDevVendor: vi.fn(),

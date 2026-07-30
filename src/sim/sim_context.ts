@@ -828,6 +828,9 @@ export interface SimContextCallbacks {
   // moveSpeedMult/swingIntervalMult are M2 decls above -> all deduped.)
   setPlayerLevel(level: number, pid?: number): void;
   notice(pid: number, text: string, color?: string): void;
+  // Fork (Duskspire): idle auto-combat pilot toggle (src/sim/idle_pilot.ts;
+  // backs the /dev pilot chat arm and the idle_pilot wire command).
+  setIdlePilot(pid: number, on: boolean): void;
   // Dev-only test-dummy spawner backing "/dev bot <name>" (handleDevChat, gated by
   // devCommands). Adds a stationary whisperable player near the primary; returns the
   // new pid, or -1 if the name is blank or already taken. Stays on Sim.
@@ -1399,6 +1402,7 @@ export function createSimContext(host: SimContextHost): SimContext {
     syncPetAspect: host.syncPetAspect,
     // G2 social plumbing passthroughs (hasPendingSocialInvite already bound above; deduped).
     setPlayerLevel: host.setPlayerLevel,
+    setIdlePilot: host.setIdlePilot,
     notice: host.notice,
     spawnDevBot: host.spawnDevBot,
     spawnDevVendor: host.spawnDevVendor,

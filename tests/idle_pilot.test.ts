@@ -129,3 +129,19 @@ describe('idle pilot', () => {
     expect(def?.requiresTarget).toBe(true);
   });
 });
+
+describe('/dev pilot chat toggle', () => {
+  it('toggles the pilot on and off (devCommands worlds only)', () => {
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior', devCommands: true });
+    sim.chat('/dev pilot on');
+    expect(sim.isIdlePilot()).toBe(true);
+    sim.chat('/dev pilot off');
+    expect(sim.isIdlePilot()).toBe(false);
+  });
+
+  it('is inert without devCommands', () => {
+    const sim = new Sim({ seed: SEED, playerClass: 'warrior' });
+    sim.chat('/dev pilot on');
+    expect(sim.isIdlePilot()).toBe(false);
+  });
+});
