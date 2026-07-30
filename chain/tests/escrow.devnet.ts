@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as anchor from '@coral-xyz/anchor';
+import BN from 'bn.js';
 import {
   getAssociatedTokenAddressSync,
   getOrCreateAssociatedTokenAccount,
@@ -100,7 +101,7 @@ async function main(): Promise<void> {
 
   const stake = spire(10);
   const rakeBps = 1000; // 10 percent, economy.md section 6
-  const matchId = new anchor.BN(Date.now());
+  const matchId = new BN(Date.now());
   const [matchState] = PublicKey.findProgramAddressSync(
     [Buffer.from('match'), matchId.toArrayLike(Buffer, 'le', 8)],
     programId,
@@ -108,7 +109,7 @@ async function main(): Promise<void> {
   const vault = getAssociatedTokenAddressSync(mint, matchState, true);
 
   await program.methods
-    .createMatch(matchId, new anchor.BN(stake.toString()), rakeBps)
+    .createMatch(matchId, new BN(stake.toString()), rakeBps)
     .accounts({
       authority: authority.publicKey,
       mint,
@@ -177,14 +178,14 @@ async function main(): Promise<void> {
   check('treasury received the rake', (await balanceOf(authorityAta)) - treasuryBefore === rake);
 
   // Refund path: new match, one deposit, authority refunds.
-  const matchId2 = new anchor.BN(Date.now() + 1);
+  const matchId2 = new BN(Date.now() + 1);
   const [matchState2] = PublicKey.findProgramAddressSync(
     [Buffer.from('match'), matchId2.toArrayLike(Buffer, 'le', 8)],
     programId,
   );
   const vault2 = getAssociatedTokenAddressSync(mint, matchState2, true);
   await program.methods
-    .createMatch(matchId2, new anchor.BN(stake.toString()), rakeBps)
+    .createMatch(matchId2, new BN(stake.toString()), rakeBps)
     .accounts({
       authority: authority.publicKey,
       mint,
